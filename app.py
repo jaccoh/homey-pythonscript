@@ -26,6 +26,13 @@ class PythonScriptApp(homey_app.App):
         # Venv pre-baking is deferred to first execution (_execute), ensuring lazy rebuild
         # only when the script actually runs. Future SDK updates may enable card-save hooks.
 
+        # Settings API (GET /venvs, DELETE /venvs/{uid}) not registered here:
+        # the Homey Python SDK does not expose self.homey.api in Python the way the JS SDK
+        # does (this.homey.api.registerGetHandler / registerDeleteHandler).
+        # The settings/index.html page calls Homey.api() via the homey-settings-client JS
+        # library, which routes through the Homey cloud/local runtime directly — no Python
+        # handler registration is needed on this side.
+
     async def _on_run_script(self, card_arguments, **_) -> dict:
         return await self._execute(card_arguments, args=None)
 
@@ -52,6 +59,18 @@ class PythonScriptApp(homey_app.App):
             card_uid=card_uid,
         )
         return result.homey_tokens
+
+    # Settings API handlers — called if the Python SDK ever gains support for registering
+    # GET/DELETE handlers. Currently unused; the settings page routes through the Homey JS
+    # runtime without needing a Python-side registration.
+    async def _api_list_venvs(self, query: dict) -> list:
+        return self._vm.list_venvs()
+
+    async def _api_delete_venv(self, body: dict) -> dict:
+        uid = body.get("uid")
+        if uid:
+            self._vm.delete(uid)
+        return {"ok": True}
 
 
 homey_export = PythonScriptApp
