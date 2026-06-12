@@ -1,0 +1,109 @@
+import asyncio
+import json
+import sys
+import tempfile
+from pathlib import Path
+
+from pythonscript.script_wrapper import generate_wrapper
+from pythonscript.homey_context import HomeyContext
+
+
+class Runner:
+    def __init__(self, sdk):
+        self._sdk = sdk
+
+    async def run(
+        self,
+        script: str,
+        args,
+        timeout: int,
+        venv_path: Path | None = None,
+    ) -> dict:
+        wrapper_code = generate_wrapper(script, args)
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False
+        ) as f:
+            f.write(wrapper_code)
+            wrapper_file = f.name
+
+        python = self._python_executable(venv_path)
+
+        proc = await asyncio.create_subprocess_exec(
+            python,
+            wrapper_file,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        return_value = None
+        tags: dict = {}
+        error: str | None = None
+
+        async def _pump():
+            nonlocal return_value, error
+            while True:
+                line = await proc.stdout.readline()
+                if not line:
+                    break
+                msg = json.loads(line.decode())
+                match msg["type"]:
+                    case "set_tag":
+                        tags[msg["name"]] = msg["value"]
+                    case "return":
+                        return_value = msg["value"]
+                    case "error":
+                        # Include exception type from traceback so callers can
+                        # match on the exception class name (e.g. "ZeroDivisionError")
+                        tb = msg.get("traceback", "")
+                        error = f"{tb.strip()}" if tb else msg["message"]
+                    case "call":
+                        try:
+                            response = await self._dispatch(msg["method"], msg["args"])
+                            reply = json.dumps({"result": response}) + "\n"
+                        except Exception as e:
+                            reply = json.dumps({"error": str(e)}) + "\n"
+                        proc.stdin.write(reply.encode())
+                        await proc.stdin.drain()
+
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(_pump(), proc.wait()),
+                timeout=timeout,
+            )
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.wait()
+            raise TimeoutError(f"Script exceeded {timeout}s timeout")
+        finally:
+            Path(wrapper_file).unlink(missing_ok=True)
+
+        if error:
+            raise RuntimeError(error)
+
+        return {"return_value": return_value, "tags": tags}
+
+    def _python_executable(self, venv_path: Path | None) -> str:
+        if venv_path is None:
+            return sys.executable
+        return str(venv_path / "bin" / "python")
+
+    async def _dispatch(self, method: str, args: list):
+        ctx = HomeyContext(sdk=self._sdk)
+        match method:
+            case "logic.get_variable":
+                return await ctx.logic.get_variable(*args)
+            case "logic.set_variable":
+                await ctx.logic.set_variable(*args)
+                return None
+            case "devices.get_capability":
+                return await ctx.devices.get_capability(*args)
+            case "devices.set_capability":
+                await ctx.devices.set_capability(*args)
+                return None
+            case "flow.trigger":
+                await ctx.flow.trigger(*args)
+                return None
+            case _:
+                raise ValueError(f"Unknown method: {method}")
