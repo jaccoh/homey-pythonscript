@@ -22,6 +22,10 @@ class PythonScriptApp(homey_app.App):
         run_arg_card = self.homey.flow.get_action_card("run_script_with_argument")
         run_arg_card.register_run_listener(self._on_run_script_with_argument)
 
+        # Homey Python SDK does not expose a card-save hook (unlike JS SDK's .on("update")).
+        # Venv pre-baking is deferred to first execution (_execute), ensuring lazy rebuild
+        # only when the script actually runs. Future SDK updates may enable card-save hooks.
+
     async def _on_run_script(self, card_arguments, **_) -> dict:
         return await self._execute(card_arguments, args=None)
 
