@@ -1,0 +1,5 @@
+.homeybuild/
+__pycache__/
+*.pyc
+uv.lock
+.playwright-mcp/

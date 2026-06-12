@@ -1,6 +1,5 @@
 {
   "title": { "en": "Run Script with Argument", "nl": "Script uitvoeren met argument" },
-  "titleFormatted": { "en": "Run [[script]] with [[argument]]", "nl": "Voer [[script]] uit met [[argument]]" },
   "highlight": true,
   "args": [
     {
@@ -11,13 +10,13 @@
     },
     {
       "name": "script",
-      "type": "textarea",
+      "type": "code",
       "title": { "en": "Script", "nl": "Script" },
       "placeholder": { "en": "# args contains the argument\nreturn args.upper()" }
     },
     {
       "name": "requirements",
-      "type": "textarea",
+      "type": "code",
       "title": { "en": "Requirements (pip format)", "nl": "Requirements (pip-formaat)" },
       "placeholder": { "en": "requests==2.31.0" }
     },

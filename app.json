@@ -1,19 +1,197 @@
 {
   "id": "nl.hoeve.pythonscript",
   "version": "1.0.0",
-  "compatibility": ">=12.0.0",
+  "compatibility": ">=13.0.0",
   "runtime": "python",
   "pythonVersion": "3.14",
   "sdk": 3,
-  "name": { "en": "Python Script", "nl": "Python Script" },
-  "description": { "en": "Run Python code from Advanced Flows", "nl": "Voer Python-code uit vanuit Advanced Flows" },
-  "category": ["tools"],
-  "platforms": ["local"],
+  "name": {
+    "en": "Python Script",
+    "nl": "Python Script"
+  },
+  "description": {
+    "en": "Run Python code from Advanced Flows",
+    "nl": "Voer Python-code uit vanuit Advanced Flows"
+  },
+  "category": [
+    "tools"
+  ],
+  "platforms": [
+    "local"
+  ],
   "images": {
     "small": "/assets/images/small.png",
     "large": "/assets/images/large.png",
     "xlarge": "/assets/images/xlarge.png"
   },
-  "author": { "name": "Jacco Hoeve" },
-  "pythonDependencies": ["restrictedpython>=7.0.0"]
+  "brandColor": "#3572A5",
+  "author": {
+    "name": "Jacco Hoeve"
+  },
+  "pythonDependencies": [
+    "restrictedpython>=7.0.0"
+  ],
+  "flow": {
+    "actions": [
+      {
+        "title": {
+          "en": "Run Script",
+          "nl": "Script uitvoeren"
+        },
+        "highlight": true,
+        "args": [
+          {
+            "name": "script",
+            "type": "code",
+            "title": {
+              "en": "Script",
+              "nl": "Script"
+            },
+            "placeholder": {
+              "en": "homey.set_tag('result', 42)\nreturn 'done'"
+            }
+          },
+          {
+            "name": "requirements",
+            "type": "code",
+            "title": {
+              "en": "Requirements (pip format)",
+              "nl": "Requirements (pip-formaat)"
+            },
+            "placeholder": {
+              "en": "requests==2.31.0\nnumpy>=1.26.0"
+            }
+          },
+          {
+            "name": "sandbox",
+            "type": "checkbox",
+            "title": {
+              "en": "Sandboxed (RestrictedPython)",
+              "nl": "Sandbox (RestrictedPython)"
+            },
+            "default": true
+          },
+          {
+            "name": "timeout",
+            "type": "number",
+            "title": {
+              "en": "Timeout (seconds)",
+              "nl": "Time-out (seconden)"
+            },
+            "placeholder": {
+              "en": "30"
+            },
+            "min": 1,
+            "max": 300
+          }
+        ],
+        "tokens": [
+          {
+            "name": "return_value",
+            "type": "string",
+            "title": {
+              "en": "Return value",
+              "nl": "Returnwaarde"
+            },
+            "example": "42"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "title": {
+              "en": "Error",
+              "nl": "Fout"
+            },
+            "example": "ValueError: ..."
+          }
+        ],
+        "id": "run_script"
+      },
+      {
+        "title": {
+          "en": "Run Script with Argument",
+          "nl": "Script uitvoeren met argument"
+        },
+        "highlight": true,
+        "args": [
+          {
+            "name": "argument",
+            "type": "text",
+            "title": {
+              "en": "Argument",
+              "nl": "Argument"
+            },
+            "placeholder": {
+              "en": "Value passed as `args` in script"
+            }
+          },
+          {
+            "name": "script",
+            "type": "code",
+            "title": {
+              "en": "Script",
+              "nl": "Script"
+            },
+            "placeholder": {
+              "en": "# args contains the argument\nreturn args.upper()"
+            }
+          },
+          {
+            "name": "requirements",
+            "type": "code",
+            "title": {
+              "en": "Requirements (pip format)",
+              "nl": "Requirements (pip-formaat)"
+            },
+            "placeholder": {
+              "en": "requests==2.31.0"
+            }
+          },
+          {
+            "name": "sandbox",
+            "type": "checkbox",
+            "title": {
+              "en": "Sandboxed (RestrictedPython)",
+              "nl": "Sandbox (RestrictedPython)"
+            },
+            "default": true
+          },
+          {
+            "name": "timeout",
+            "type": "number",
+            "title": {
+              "en": "Timeout (seconds)",
+              "nl": "Time-out (seconden)"
+            },
+            "placeholder": {
+              "en": "30"
+            },
+            "min": 1,
+            "max": 300
+          }
+        ],
+        "tokens": [
+          {
+            "name": "return_value",
+            "type": "string",
+            "title": {
+              "en": "Return value",
+              "nl": "Returnwaarde"
+            },
+            "example": "42"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "title": {
+              "en": "Error",
+              "nl": "Fout"
+            },
+            "example": "ValueError: ..."
+          }
+        ],
+        "id": "run_script_with_argument"
+      }
+    ]
+  }
 }

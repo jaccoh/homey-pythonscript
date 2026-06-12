@@ -1,17 +1,16 @@
 {
   "title": { "en": "Run Script", "nl": "Script uitvoeren" },
-  "titleFormatted": { "en": "Run [[script]]", "nl": "Voer [[script]] uit" },
   "highlight": true,
   "args": [
     {
       "name": "script",
-      "type": "textarea",
+      "type": "code",
       "title": { "en": "Script", "nl": "Script" },
       "placeholder": { "en": "homey.set_tag('result', 42)\nreturn 'done'" }
     },
     {
       "name": "requirements",
-      "type": "textarea",
+      "type": "code",
       "title": { "en": "Requirements (pip format)", "nl": "Requirements (pip-formaat)" },
       "placeholder": { "en": "requests==2.31.0\nnumpy>=1.26.0" }
     },
