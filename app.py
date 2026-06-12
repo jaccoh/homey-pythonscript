@@ -48,17 +48,24 @@ class PythonScriptApp(homey_app.App):
 
         if requirements and self._vm.needs_rebuild(card_uid, requirements):
             self.log(f"Building venv for card {card_uid}")
-            await self._vm.build(card_uid, requirements)
+            try:
+                await self._vm.build(card_uid, requirements)
+            except Exception as e:
+                self.log(f"Venv build failed for card {card_uid}: {e}")
+                return {"return_value": "", "error": f"pip install failed: {e}"}
 
-        result = await self._executor.run(
-            script=script,
-            args=args,
-            sandbox=sandbox,
-            requirements=requirements,
-            timeout=timeout,
-            card_uid=card_uid,
-        )
-        return result.homey_tokens
+        try:
+            result = await self._executor.run(
+                script=script,
+                args=args,
+                sandbox=sandbox,
+                requirements=requirements,
+                timeout=timeout,
+                card_uid=card_uid,
+            )
+            return result.homey_tokens
+        except Exception as e:
+            return {"return_value": "", "error": str(e)}
 
 
 homey_export = PythonScriptApp

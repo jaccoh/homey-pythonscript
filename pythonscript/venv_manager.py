@@ -32,6 +32,8 @@ class VenvManager:
             shutil.rmtree(target)
 
     def list_venvs(self) -> list[dict]:
+        if not self._root.exists():
+            return []
         entries = []
         for d in self._root.iterdir():
             if not d.is_dir():

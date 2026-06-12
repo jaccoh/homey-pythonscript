@@ -1,7 +1,7 @@
 import operator
 import textwrap
 from RestrictedPython import compile_restricted_function, safe_builtins
-from RestrictedPython.Guards import safer_getattr
+from RestrictedPython.Guards import safer_getattr, full_write_guard
 
 
 class SecurityError(Exception):
@@ -33,10 +33,6 @@ def _blocked_open(*args, **kwargs):
 
 def _blocked_exec(*args, **kwargs):
     raise SecurityError("exec() is not allowed in sandboxed mode")
-
-
-def _safe_write(obj):
-    return obj
 
 
 def _safe_getattr(obj, name, *args):
@@ -74,6 +70,8 @@ class Sandbox:
         builtins["__import__"] = _make_restricted_import(_ALLOWED_IMPORTS)
         builtins["open"] = _blocked_open
         builtins["exec"] = _blocked_exec
+        builtins["eval"] = _blocked_exec
+        builtins["compile"] = _blocked_exec
         builtins["_getattr_"] = _safe_getattr
 
         namespace = {
@@ -81,7 +79,7 @@ class Sandbox:
             "_getattr_": _safe_getattr,
             "_getitem_": operator.getitem,
             "_getiter_": iter,
-            "_write_": _safe_write,
+            "_write_": full_write_guard,
         }
 
         exec(result.code, namespace)
