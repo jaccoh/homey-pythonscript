@@ -1,9 +1,53 @@
-from homey import app
+import os
+from pathlib import Path
+
+from homey import app as homey_app
+
+from pythonscript.executor import Executor
+from pythonscript.venv_manager import VenvManager
+
+_VENV_ROOT = Path(os.environ.get("VENV_ROOT", "/userdata/venvs"))
+_DEFAULT_TIMEOUT = 30
 
 
-class PythonScriptApp(app.App):
+class PythonScriptApp(homey_app.App):
     async def on_init(self) -> None:
         self.log("PythonScriptApp initialised")
+        self._vm = VenvManager(venv_root=_VENV_ROOT)
+        self._executor = Executor(sdk=self.homey, venv_root=_VENV_ROOT)
+
+        run_card = self.homey.flow.get_action_card("run_script")
+        run_card.register_run_listener(self._on_run_script)
+
+        run_arg_card = self.homey.flow.get_action_card("run_script_with_argument")
+        run_arg_card.register_run_listener(self._on_run_script_with_argument)
+
+    async def _on_run_script(self, card_arguments, **_) -> dict:
+        return await self._execute(card_arguments, args=None)
+
+    async def _on_run_script_with_argument(self, card_arguments, **_) -> dict:
+        return await self._execute(card_arguments, args=card_arguments.get("argument"))
+
+    async def _execute(self, card_arguments: dict, args) -> dict:
+        script = card_arguments.get("script", "")
+        requirements = card_arguments.get("requirements", "") or ""
+        sandbox = card_arguments.get("sandbox", True)
+        timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
+        card_uid = card_arguments.get("_uid", "default")
+
+        if requirements and self._vm.needs_rebuild(card_uid, requirements):
+            self.log(f"Building venv for card {card_uid}")
+            await self._vm.build(card_uid, requirements)
+
+        result = await self._executor.run(
+            script=script,
+            args=args,
+            sandbox=sandbox,
+            requirements=requirements,
+            timeout=timeout,
+            card_uid=card_uid,
+        )
+        return result.homey_tokens
 
 
 homey_export = PythonScriptApp
