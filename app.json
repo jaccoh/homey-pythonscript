@@ -1,0 +1,19 @@
+{
+  "id": "nl.hoeve.pythonscript",
+  "version": "1.0.0",
+  "compatibility": ">=12.0.0",
+  "runtime": "python",
+  "pythonVersion": "3.14",
+  "sdk": 3,
+  "name": { "en": "Python Script", "nl": "Python Script" },
+  "description": { "en": "Run Python code from Advanced Flows", "nl": "Voer Python-code uit vanuit Advanced Flows" },
+  "category": ["tools"],
+  "platforms": ["local"],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": { "name": "Jacco Hoeve" },
+  "pythonDependencies": ["restrictedpython>=7.0.0"]
+}
