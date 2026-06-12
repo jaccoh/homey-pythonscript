@@ -57,7 +57,7 @@
         var venvs = await Homey.api('GET', '/venvs');
         var tbody = document.getElementById('venv-list');
         while (tbody.firstChild) { tbody.removeChild(tbody.firstChild); }
-        if (!venvs || !venvs.length) {
+        if (!venvs || !Array.isArray(venvs) || !venvs.length) {
           setStatus('No virtual environments.');
           return;
         }

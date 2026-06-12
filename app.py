@@ -60,17 +60,5 @@ class PythonScriptApp(homey_app.App):
         )
         return result.homey_tokens
 
-    # Settings API handlers — called if the Python SDK ever gains support for registering
-    # GET/DELETE handlers. Currently unused; the settings page routes through the Homey JS
-    # runtime without needing a Python-side registration.
-    async def _api_list_venvs(self, query: dict) -> list:
-        return self._vm.list_venvs()
-
-    async def _api_delete_venv(self, body: dict) -> dict:
-        uid = body.get("uid")
-        if uid:
-            self._vm.delete(uid)
-        return {"ok": True}
-
 
 homey_export = PythonScriptApp
