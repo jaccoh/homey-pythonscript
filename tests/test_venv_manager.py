@@ -1,5 +1,3 @@
-import pytest
-from pathlib import Path
 from pythonscript.venv_manager import VenvManager
 
 

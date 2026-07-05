@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from pythonscript.executor import Executor, ExecutionResult
+from pythonscript.executor import Executor
 
 
 @pytest.fixture

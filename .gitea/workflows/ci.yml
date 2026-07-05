@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python
+        run: apk add --no-cache python3 py3-pip
+
+      - name: Install uv
+        run: pip3 install --break-system-packages uv
+
+      - name: Run tests
+        run: uv run pytest -v
+
+  lint:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python
+        run: apk add --no-cache python3 py3-pip
+
+      - name: Install ruff
+        run: pip3 install --break-system-packages ruff
+
+      - name: Lint
+        run: ruff check .
+
+  review:
+    runs-on: self-hosted
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python
+        run: apk add --no-cache python3 py3-pip
+
+      - name: Install anthropic
+        run: pip3 install --break-system-packages anthropic
+
+      - name: Claude code review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          git fetch origin
+          export GIT_DIFF="$(git diff origin/main..HEAD)"
+          python3 -c "
+import anthropic, os, sys
+diff = os.environ.get('GIT_DIFF', '')
+if not diff.strip():
+    print('No diff to review.')
+    sys.exit(0)
+client = anthropic.Anthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
+msg = client.messages.create(
+    model='claude-sonnet-5',
+    max_tokens=1024,
+    messages=[{'role': 'user', 'content': 'You are a code reviewer. Review this Python diff for bugs, security issues, and code quality problems. Be concise and actionable.\n\n' + diff}]
+)
+print(msg.content[0].text)
+"
+
+  deploy:
+    runs-on: self-hosted
+    needs: [test, lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python
+        run: apk add --no-cache python3 py3-pip
+
+      - name: Install uv
+        run: pip3 install --break-system-packages uv
+
+      - name: Install Homey CLI
+        run: npm install -g homey --quiet
+
+      - name: Restore Homey CLI settings
+        env:
+          HOMEY_ATHOM_CLI_SETTINGS: ${{ secrets.HOMEY_ATHOM_CLI_SETTINGS }}
+        run: |
+          mkdir -p ~/.athom-cli
+          printf '%s' "$HOMEY_ATHOM_CLI_SETTINGS" > ~/.athom-cli/settings.json
+
+      - name: Validate app
+        run: homey app validate
+
+      - name: Deploy to Homey
+        run: homey app install

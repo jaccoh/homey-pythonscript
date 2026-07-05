@@ -1,5 +1,4 @@
 import ast
-import pytest
 from pythonscript.script_wrapper import generate_wrapper
 
 
