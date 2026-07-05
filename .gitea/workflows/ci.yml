@@ -12,28 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Python
-        run: apk add --no-cache python3 py3-pip
-
       - name: Install uv
-        run: pip3 install --break-system-packages uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Run tests
-        run: uv run pytest -v
+        run: ~/.local/bin/uv run --extra dev pytest -v
 
   lint:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Python
-        run: apk add --no-cache python3 py3-pip
-
-      - name: Install ruff
-        run: pip3 install --break-system-packages ruff
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Lint
-        run: ruff check .
+        run: ~/.local/bin/uv tool run ruff check .
 
   review:
     runs-on: self-hosted
@@ -43,11 +39,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Python
-        run: apk add --no-cache python3 py3-pip
-
-      - name: Install anthropic
-        run: pip3 install --break-system-packages anthropic
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Claude code review
         env:
@@ -55,7 +49,7 @@ jobs:
         run: |
           git fetch origin
           export GIT_DIFF="$(git diff origin/main..HEAD)"
-          python3 scripts/ci_review.py
+          ~/.local/bin/uv run --with anthropic python scripts/ci_review.py
 
   deploy:
     runs-on: self-hosted
@@ -63,14 +57,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Python
-        run: apk add --no-cache python3 py3-pip
-
-      - name: Install uv
-        run: pip3 install --break-system-packages uv
-
-      - name: Install Homey CLI
-        run: npm install -g homey --quiet
+      - name: Install uv + Homey CLI
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          npm install -g homey --quiet
 
       - name: Restore Homey CLI settings
         env:
@@ -82,5 +72,5 @@ jobs:
       - name: Validate app
         run: homey app validate
 
-      - name: Deploy to Homey
+      - name: Deploy to Homey SHS
         run: homey app install
