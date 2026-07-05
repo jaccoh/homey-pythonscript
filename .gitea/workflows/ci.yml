@@ -70,6 +70,9 @@ jobs:
           mkdir -p ~/.athom-cli
           printf '%s' "$HOMEY_ATHOM_CLI_SETTINGS" > ~/.athom-cli/settings.json
 
+      - name: Refresh Athom OAuth token
+        run: python3 scripts/refresh_homey_token.py
+
       - name: Validate app
         run: homey app validate
 
