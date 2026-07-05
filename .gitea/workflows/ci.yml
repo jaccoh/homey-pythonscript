@@ -59,6 +59,7 @@ jobs:
 
       - name: Install uv + Homey CLI
         run: |
+          apk add --no-cache npm
           curl -LsSf https://astral.sh/uv/install.sh | sh
           npm install -g homey --quiet
 
