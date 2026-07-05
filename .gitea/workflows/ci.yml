@@ -57,9 +57,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install uv + Homey CLI
+      - name: Install dependencies
         run: |
-          apk add --no-cache npm
+          apk add --no-cache npm python3
           curl -LsSf https://astral.sh/uv/install.sh | sh
           npm install -g homey --quiet
 
