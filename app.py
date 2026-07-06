@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from pythonscript.venv_manager import VenvManager  # noqa: E402
 
 _VENV_ROOT = Path(os.environ.get("VENV_ROOT", "/userdata/venvs"))
 _DEFAULT_TIMEOUT = 30
+_VENV_NAME_RE = re.compile(r'^[\w\-]+$')
 
 
 class PythonScriptApp(homey_app.App):
@@ -20,22 +22,27 @@ class PythonScriptApp(homey_app.App):
         self._vm = VenvManager(venv_root=_VENV_ROOT)
         self._executor = Executor(sdk=self.homey, venv_root=_VENV_ROOT)
 
-        run_card = self.homey.flow.get_action_card("run_script")
-        run_card.register_run_listener(self._on_run_script)
+        for card_id in ("run_script", "run_script_with_argument"):
+            card = self.homey.flow.get_action_card(card_id)
+            if card_id == "run_script":
+                card.register_run_listener(self._on_run_script)
+            else:
+                card.register_run_listener(self._on_run_script_with_argument)
+            venv_arg = card.get_argument("venv_name")
+            venv_arg.register_autocomplete_listener(self._autocomplete_venv_name)
 
-        run_arg_card = self.homey.flow.get_action_card("run_script_with_argument")
-        run_arg_card.register_run_listener(self._on_run_script_with_argument)
-
-        # Homey Python SDK does not expose a card-save hook (unlike JS SDK's .on("update")).
-        # Venv pre-baking is deferred to first execution (_execute), ensuring lazy rebuild
-        # only when the script actually runs. Future SDK updates may enable card-save hooks.
-
-        # Settings API (GET /venvs, DELETE /venvs/{uid}) not registered here:
-        # the Homey Python SDK does not expose self.homey.api in Python the way the JS SDK
-        # does (this.homey.api.registerGetHandler / registerDeleteHandler).
-        # The settings/index.html page calls Homey.api() via the homey-settings-client JS
-        # library, which routes through the Homey cloud/local runtime directly — no Python
-        # handler registration is needed on this side.
+    async def _autocomplete_venv_name(self, query, **_):
+        """Return existing venv names + 'Create new' option for novel query."""
+        existing = [v["card_uid"] for v in self._vm.list_venvs()]
+        results = [
+            {"name": name, "description": "existing environment"}
+            for name in existing
+            if not query or query.lower() in name.lower()
+        ]
+        # Offer creating a new name if query looks valid and not already present
+        if query and _VENV_NAME_RE.match(query) and query not in existing:
+            results.insert(0, {"name": query, "description": "create new environment"})
+        return results
 
     async def _on_run_script(self, card_arguments, **_) -> dict:
         return await self._execute(card_arguments, args=None)
@@ -48,14 +55,15 @@ class PythonScriptApp(homey_app.App):
         requirements = card_arguments.get("requirements", "") or ""
         sandbox = card_arguments.get("sandbox", True)
         timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
-        # Use a hash of requirements as venv key — venv content is determined
-        # by requirements, not card identity. Homey doesn't expose a stable
-        # per-card-instance ID in card_arguments.
-        import hashlib
-        card_uid = hashlib.sha256(requirements.encode()).hexdigest()[:16] if requirements else "no-requirements"
+
+        # venv_name from autocomplete field; may be a dict {"name": ..., "description": ...}
+        raw_venv = card_arguments.get("venv_name") or ""
+        if isinstance(raw_venv, dict):
+            raw_venv = raw_venv.get("name", "")
+        card_uid = str(raw_venv).strip() or "default"
 
         if requirements and self._vm.needs_rebuild(card_uid, requirements):
-            self.log(f"Building venv for card {card_uid}")
+            self.log(f"Building venv '{card_uid}'")
             await self._vm.build(card_uid, requirements)
 
         result = await self._executor.run(
