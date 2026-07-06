@@ -69,8 +69,6 @@ class PythonScriptApp(homey_app.App):
             )
             return result.homey_tokens
         except Exception as e:
-            import traceback
-            self.error(f"execute error: {e}\n{traceback.format_exc()}")
             return {"return_value": "", "error": str(e)}
 
 
