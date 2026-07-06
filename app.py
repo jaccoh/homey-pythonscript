@@ -22,8 +22,9 @@ try:
     from pythonscript.venv_manager import VenvManager
 except Exception as _import_err:
     import traceback
-    print(f"IMPORT ERROR: {_import_err}", flush=True)
-    traceback.print_exc()
+    _msg = f"IMPORT ERROR: {_import_err}\n" + traceback.format_exc()
+    sys.stderr.write(_msg)
+    sys.stderr.flush()
     raise
 
 _VENV_ROOT = Path(os.environ.get("VENV_ROOT", "/userdata/venvs"))
