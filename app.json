@@ -28,7 +28,7 @@
   "author": {
     "name": "Jacco Hoeve"
   },
-  "pythonDependencies": [
+  "pythonPackages": [
     "restrictedpython>=7.0.0"
   ],
   "flow": {
