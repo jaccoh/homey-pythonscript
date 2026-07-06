@@ -15,6 +15,7 @@ class ExecutionResult:
     def homey_tokens(self) -> dict:
         tokens = {
             "return_value": str(self.return_value) if self.return_value is not None else "",
+            "error": "",
         }
         tokens.update({k: str(v) for k, v in self.tags.items()})
         return tokens
