@@ -21,7 +21,7 @@
   <div id="status">Loading...</div>
   <div id="error"></div>
   <table>
-    <thead><tr><th>Card UID</th><th>Hash (prefix)</th><th></th></tr></thead>
+    <thead><tr><th>Environment</th><th>Requirements hash</th><th></th></tr></thead>
     <tbody id="venv-list"></tbody>
   </table>
 
@@ -33,7 +33,7 @@
       var tr = document.createElement('tr');
 
       var tdUid = document.createElement('td');
-      tdUid.textContent = v.card_uid;
+      tdUid.textContent = v.name;
 
       var tdHash = document.createElement('td');
       tdHash.textContent = v.hash ? v.hash.slice(0, 12) + '...' : '-';
@@ -42,7 +42,7 @@
       var btn = document.createElement('button');
       btn.className = 'del';
       btn.textContent = 'Delete';
-      btn.addEventListener('click', function() { delVenv(v.card_uid); });
+      btn.addEventListener('click', function() { delVenv(v.name); });
       tdAction.appendChild(btn);
 
       tr.appendChild(tdUid);

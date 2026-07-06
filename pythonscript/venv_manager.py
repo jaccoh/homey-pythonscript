@@ -40,7 +40,7 @@ class VenvManager:
                 continue
             hf = d / ".requirements_hash"
             entries.append({
-                "card_uid": d.name,
+                "name": d.name,
                 "hash": hf.read_text() if hf.exists() else None,
             })
         return entries
