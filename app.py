@@ -1,5 +1,19 @@
 import os
+import platform
+import sys
 from pathlib import Path
+
+# Homey SHS does not activate the bundled venv automatically.
+# Inject bundled site-packages into sys.path before any third-party imports.
+_arch = "arm64" if platform.machine() in ("arm64", "aarch64") else "amd64"
+_site = Path(__file__).parent / "python_packages" / _arch / ".venv" / "lib"
+if _site.exists():
+    for _p in _site.iterdir():
+        if _p.name.startswith("python"):
+            _sp = _p / "site-packages"
+            if _sp.exists() and str(_sp) not in sys.path:
+                sys.path.insert(0, str(_sp))
+            break
 
 from homey import app as homey_app
 
