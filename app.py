@@ -48,7 +48,11 @@ class PythonScriptApp(homey_app.App):
         requirements = card_arguments.get("requirements", "") or ""
         sandbox = card_arguments.get("sandbox", True)
         timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
-        card_uid = card_arguments.get("_uid", "default")
+        # Use a hash of requirements as venv key — venv content is determined
+        # by requirements, not card identity. Homey doesn't expose a stable
+        # per-card-instance ID in card_arguments.
+        import hashlib
+        card_uid = hashlib.sha256(requirements.encode()).hexdigest()[:16] if requirements else "no-requirements"
 
         if requirements and self._vm.needs_rebuild(card_uid, requirements):
             self.log(f"Building venv for card {card_uid}")
