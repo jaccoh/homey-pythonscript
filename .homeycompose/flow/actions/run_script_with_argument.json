@@ -18,7 +18,8 @@
       "name": "requirements",
       "type": "code",
       "title": { "en": "Requirements (pip format)", "nl": "Requirements (pip-formaat)" },
-      "placeholder": { "en": "requests==2.31.0" }
+      "placeholder": { "en": "requests==2.31.0" },
+      "required": false
     },
     {
       "name": "sandbox",
@@ -32,7 +33,8 @@
       "title": { "en": "Timeout (seconds)", "nl": "Time-out (seconden)" },
       "placeholder": { "en": "30" },
       "min": 1,
-      "max": 300
+      "max": 300,
+      "required": false
     }
   ],
   "tokens": [
