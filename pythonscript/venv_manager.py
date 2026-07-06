@@ -52,25 +52,17 @@ class VenvManager:
         """pip install requirements into venvs/{card_uid}/. Raises on failure."""
         venv_dir = self.venv_path(card_uid)
         venv_dir.mkdir(parents=True, exist_ok=True)
-
-        subprocess.run(
-            [sys.executable, "-m", "venv", str(venv_dir)],
-            check=True,
-            capture_output=True,
-        )
-
-        pip = venv_dir / "bin" / "pip"
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-            f.write(requirements.strip())
-            req_file = f.name
-
         try:
-            subprocess.run(
-                [str(pip), "install", "-r", req_file],
-                check=True,
-                capture_output=True,
-            )
-        finally:
-            Path(req_file).unlink(missing_ok=True)
-
-        self._write_hash(card_uid, requirements)
+            subprocess.run([sys.executable, "-m", "venv", str(venv_dir)], check=True, capture_output=True)
+            pip = venv_dir / "bin" / "pip"
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+                f.write(requirements.strip())
+                req_file = f.name
+            try:
+                subprocess.run([str(pip), "install", "-r", req_file], check=True, capture_output=True)
+            finally:
+                Path(req_file).unlink(missing_ok=True)
+            self._write_hash(card_uid, requirements)
+        except Exception:
+            shutil.rmtree(venv_dir, ignore_errors=True)
+            raise

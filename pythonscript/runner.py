@@ -47,7 +47,10 @@ class Runner:
                 line = await proc.stdout.readline()
                 if not line:
                     break
-                msg = json.loads(line.decode())
+                try:
+                    msg = json.loads(line.decode())
+                except json.JSONDecodeError:
+                    continue  # skip malformed lines, don't kill the subprocess
                 match msg["type"]:
                     case "set_tag":
                         tags[msg["name"]] = msg["value"]

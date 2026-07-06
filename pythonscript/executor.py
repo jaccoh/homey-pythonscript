@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -50,7 +51,13 @@ class Executor:
             from pythonscript.homey_context import HomeyContext
             homey_ctx = HomeyContext(sdk=self._sdk)
             sb = Sandbox()
-            raw = await sb.run(script=script, homey=homey_ctx, args=args)
+            try:
+                raw = await asyncio.wait_for(
+                    sb.run(script=script, homey=homey_ctx, args=args),
+                    timeout=timeout,
+                )
+            except asyncio.TimeoutError:
+                raise TimeoutError(f"Script exceeded {timeout}s timeout")
 
         return ExecutionResult(
             return_value=raw["return_value"],

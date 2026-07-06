@@ -42,7 +42,7 @@ class HomeyBridge:
         return response["result"]
 
     async def _arpc(self, method: str, args: list):
-        loop = _asyncio.get_event_loop()
+        loop = _asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._rpc, method, args)
 
 

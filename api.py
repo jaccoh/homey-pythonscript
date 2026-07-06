@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import re
 
 from pythonscript.venv_manager import VenvManager
 
@@ -12,6 +13,8 @@ async def venvs(homey, **kwargs):
 
 
 async def delete_venv(homey, uid, **kwargs):
+    if not uid or not re.match(r'^[\w\-\.]+$', uid) or '..' in uid:
+        raise ValueError(f"Invalid uid: {uid!r}")
     vm = VenvManager(venv_root=_VENV_ROOT)
     vm.delete(uid)
     return None

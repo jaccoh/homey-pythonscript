@@ -49,11 +49,10 @@ class Sandbox:
         homey=None,
         args=None,
     ) -> dict:
-        # Prepend args injection into the script body
-        body = f"args = {repr(args)}\n{textwrap.dedent(script)}"
+        body = textwrap.dedent(script)
 
         result = compile_restricted_function(
-            p="homey",
+            p="homey, args",
             body=body,
             name=_FUNC_NAME,
             filename="<script>",
@@ -63,7 +62,7 @@ class Sandbox:
             # Syntax errors use the template: "Line N: SyntaxError: <msg> at statement: ..."
             # Security restrictions use: "Line N: <restriction message>"
             if any(": SyntaxError:" in e for e in result.errors):
-                raise SyntaxError(result.errors)
+                raise SyntaxError("; ".join(result.errors))
             raise SecurityError("; ".join(result.errors))
 
         builtins = dict(safe_builtins)
@@ -83,6 +82,6 @@ class Sandbox:
         }
 
         exec(result.code, namespace)
-        return_value = namespace[_FUNC_NAME](homey)
+        return_value = namespace[_FUNC_NAME](homey, args)
         tags = dict(homey._tags) if homey is not None else {}
         return {"return_value": return_value, "tags": tags}
