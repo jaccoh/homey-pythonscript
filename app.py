@@ -41,6 +41,7 @@ class PythonScriptApp(homey_app.App):
         return await self._execute(card_arguments, args=None)
 
     async def _on_run_script_with_argument(self, card_arguments, **_) -> dict:
+        self.log(f"[debug] card_arguments keys: {list(card_arguments.keys()) if card_arguments else None}")
         return await self._execute(card_arguments, args=card_arguments.get("argument"))
 
     async def _execute(self, card_arguments: dict, args) -> dict:
