@@ -61,7 +61,7 @@ jobs:
         run: |
           apk add --no-cache npm python3
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          npm install -g homey@3 --quiet
+          npm install -g homey@latest --quiet
 
       - name: Restore Homey CLI settings
         env:
@@ -74,7 +74,7 @@ jobs:
         run: python3 scripts/refresh_homey_token.py
 
       - name: Validate app
-        run: homey app validate --level debug
+        run: homey app validate
 
       - name: Deploy to Homey SHS
         run: homey app install
