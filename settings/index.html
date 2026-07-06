@@ -81,7 +81,10 @@
       }
     }
 
-    Homey.ready().then(load);
+    function onHomeyReady(Homey) {
+      Homey.ready();
+      load();
+    }
   </script>
 </body>
 </html>
