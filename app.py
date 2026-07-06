@@ -1,33 +1,10 @@
 import os
-import platform
-import sys
 from pathlib import Path
 
-sys.stdout = sys.stderr  # redirect SDK's print() errors to stderr for SHS log visibility
+from homey import app as homey_app
 
-# Homey SHS does not activate the bundled venv automatically.
-# Inject bundled site-packages into sys.path before any third-party imports.
-_arch = "arm64" if platform.machine() in ("arm64", "aarch64") else "amd64"
-# CLI flattens python_packages/{arch}/.venv/lib → python_packages/{arch}/lib
-_site = Path(__file__).parent / "python_packages" / _arch / "lib"
-if _site.exists():
-    for _p in _site.iterdir():
-        if _p.name.startswith("python"):
-            _sp = _p / "site-packages"
-            if _sp.exists() and str(_sp) not in sys.path:
-                sys.path.insert(0, str(_sp))
-            break
-
-try:
-    from homey import app as homey_app
-    from pythonscript.executor import Executor
-    from pythonscript.venv_manager import VenvManager
-except Exception as _import_err:
-    import traceback
-    _msg = f"IMPORT ERROR: {_import_err}\n" + traceback.format_exc()
-    sys.stderr.write(_msg)
-    sys.stderr.flush()
-    raise
+from pythonscript.executor import Executor
+from pythonscript.venv_manager import VenvManager
 
 _VENV_ROOT = Path(os.environ.get("VENV_ROOT", "/userdata/venvs"))
 _DEFAULT_TIMEOUT = 30
