@@ -42,7 +42,7 @@
       var btn = document.createElement('button');
       btn.className = 'del';
       btn.textContent = 'Delete';
-      btn.addEventListener('click', function() { delVenv(v.name); });
+      btn.addEventListener('click', function() { delVenv(v.name, btn); });
       tdAction.appendChild(btn);
 
       tr.appendChild(tdUid);
@@ -71,13 +71,20 @@
       }
     }
 
-    async function delVenv(uid) {
-      if (!confirm('Delete venv for ' + uid + '? The next run will rebuild it.')) return;
+    async function delVenv(uid, btn) {
+      if (btn.dataset.confirm !== '1') {
+        btn.dataset.confirm = '1';
+        btn.textContent = 'Confirm?';
+        setTimeout(function() { btn.dataset.confirm = '0'; btn.textContent = 'Delete'; }, 3000);
+        return;
+      }
+      btn.disabled = true;
       try {
         await Homey.api('DELETE', '/venv', {uid: uid});
         load();
       } catch (e) {
         setError('Delete failed: ' + e.message);
+        btn.disabled = false;
       }
     }
 
