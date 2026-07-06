@@ -31,6 +31,19 @@
   "pythonPackages": [
     "restrictedpython>=7.0.0"
   ],
+  "permissions": [
+    "homey:manager:api"
+  ],
+  "api": {
+    "venvs": {
+      "method": "GET",
+      "path": "/venvs"
+    },
+    "delete_venv": {
+      "method": "DELETE",
+      "path": "/venvs/:uid"
+    }
+  },
   "flow": {
     "actions": [
       {
