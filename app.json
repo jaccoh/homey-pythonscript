@@ -41,7 +41,7 @@
     },
     "delete_venv": {
       "method": "DELETE",
-      "path": "/venvs/:uid"
+      "path": "/venvs"
     }
   },
   "flow": {
@@ -73,7 +73,8 @@
             },
             "placeholder": {
               "en": "requests==2.31.0\nnumpy>=1.26.0"
-            }
+            },
+            "required": false
           },
           {
             "name": "sandbox",
@@ -95,7 +96,8 @@
               "en": "30"
             },
             "min": 1,
-            "max": 300
+            "max": 300,
+            "required": false
           }
         ],
         "tokens": [
@@ -158,7 +160,8 @@
             },
             "placeholder": {
               "en": "requests==2.31.0"
-            }
+            },
+            "required": false
           },
           {
             "name": "sandbox",
@@ -180,7 +183,8 @@
               "en": "30"
             },
             "min": 1,
-            "max": 300
+            "max": 300,
+            "required": false
           }
         ],
         "tokens": [

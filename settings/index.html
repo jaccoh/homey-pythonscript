@@ -74,7 +74,7 @@
     async function delVenv(uid) {
       if (!confirm('Delete venv for ' + uid + '? The next run will rebuild it.')) return;
       try {
-        await Homey.api('DELETE', '/venvs/' + encodeURIComponent(uid));
+        await Homey.api('DELETE', '/venvs', {uid: uid});
         load();
       } catch (e) {
         setError('Delete failed: ' + e.message);
