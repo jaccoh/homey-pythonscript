@@ -17,3 +17,7 @@ packages = ["pythonscript"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# app.py injects bundled venv into sys.path before third-party imports
+"app.py" = ["E402"]
