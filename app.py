@@ -16,10 +16,15 @@ if _site.exists():
                 sys.path.insert(0, str(_sp))
             break
 
-from homey import app as homey_app
-
-from pythonscript.executor import Executor
-from pythonscript.venv_manager import VenvManager
+try:
+    from homey import app as homey_app
+    from pythonscript.executor import Executor
+    from pythonscript.venv_manager import VenvManager
+except Exception as _import_err:
+    import traceback
+    print(f"IMPORT ERROR: {_import_err}", flush=True)
+    traceback.print_exc()
+    raise
 
 _VENV_ROOT = Path(os.environ.get("VENV_ROOT", "/userdata/venvs"))
 _DEFAULT_TIMEOUT = 30
