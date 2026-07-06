@@ -34,10 +34,24 @@ class TestSandboxAllowed:
         assert result["return_value"] == 4.0
 
     @pytest.mark.asyncio
+    async def test_json_module_allowed(self):
+        """json is on the whitelist and must be importable in sandboxed mode."""
+        sb = Sandbox()
+        result = await sb.run("import json\nreturn json.dumps({'k': 1})")
+        assert result["return_value"] == '{"k": 1}'
+
+    @pytest.mark.asyncio
     async def test_set_tag_collected(self):
         sb = Sandbox()
         result = await sb.run("homey.set_tag('x', 99)", homey=_MockHomey())
         assert result["tags"]["x"] == 99
+
+    @pytest.mark.asyncio
+    async def test_args_none_when_not_provided(self):
+        """args defaults to None; 'return args' returns None when no arg supplied."""
+        sb = Sandbox()
+        result = await sb.run("return args")  # no args= keyword
+        assert result["return_value"] is None
 
 
 class TestSandboxBlocked:
@@ -52,6 +66,20 @@ class TestSandboxBlocked:
         sb = Sandbox()
         with pytest.raises(SecurityError):
             await sb.run("import subprocess")
+
+    @pytest.mark.asyncio
+    async def test_import_requests_blocked(self):
+        """Third-party packages not on the whitelist must be blocked."""
+        sb = Sandbox()
+        with pytest.raises(SecurityError):
+            await sb.run("import requests")
+
+    @pytest.mark.asyncio
+    async def test_import_sys_blocked(self):
+        """sys is not on the whitelist and must be blocked."""
+        sb = Sandbox()
+        with pytest.raises(SecurityError):
+            await sb.run("import sys")
 
     @pytest.mark.asyncio
     async def test_open_blocked(self):

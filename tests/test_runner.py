@@ -1,3 +1,4 @@
+import sys
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from pythonscript.runner import Runner
@@ -70,3 +71,18 @@ class TestRunnerVenv:
             venv_path=None,
         )
         assert isinstance(result["return_value"], str)
+
+
+class TestRunnerPythonExecutable:
+    """Unit tests for Runner._python_executable — no subprocess required."""
+
+    def test_no_venv_returns_sys_executable(self, mock_sdk):
+        runner = Runner(sdk=mock_sdk)
+        assert runner._python_executable(None) == sys.executable
+
+    def test_venv_path_returns_venv_python(self, mock_sdk, tmp_path):
+        """When a venv_path is provided, the runner must use <venv>/bin/python."""
+        runner = Runner(sdk=mock_sdk)
+        venv = tmp_path / "my-venv"
+        result = runner._python_executable(venv)
+        assert result == str(venv / "bin" / "python")
