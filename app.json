@@ -40,8 +40,8 @@
       "path": "/venvs"
     },
     "delete_venv": {
-      "method": "DELETE",
-      "path": "/venv"
+      "method": "POST",
+      "path": "/venv-delete"
     }
   },
   "flow": {
