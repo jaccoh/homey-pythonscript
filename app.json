@@ -61,8 +61,78 @@
               "nl": "Script"
             },
             "placeholder": {
-              "en": "homey.set_tag('result', 42)\nreturn 'done'"
+              "en": "return 42"
             }
+          },
+          {
+            "name": "argument",
+            "type": "text",
+            "title": {
+              "en": "Argument (optional)",
+              "nl": "Argument (optioneel)"
+            },
+            "placeholder": {
+              "en": "Value passed as `args`"
+            },
+            "required": false
+          },
+          {
+            "name": "timeout",
+            "type": "number",
+            "title": {
+              "en": "Timeout (seconds)",
+              "nl": "Time-out (seconden)"
+            },
+            "placeholder": {
+              "en": "30"
+            },
+            "min": 1,
+            "max": 300,
+            "required": false
+          }
+        ],
+        "tokens": [
+          {
+            "name": "return_value",
+            "type": "string",
+            "title": {
+              "en": "Return value",
+              "nl": "Returnwaarde"
+            },
+            "example": "42"
+          }
+        ],
+        "id": "run_script"
+      },
+      {
+        "title": {
+          "en": "Run Script with Packages",
+          "nl": "Script uitvoeren met packages"
+        },
+        "highlight": true,
+        "args": [
+          {
+            "name": "script",
+            "type": "code",
+            "title": {
+              "en": "Script",
+              "nl": "Script"
+            },
+            "placeholder": {
+              "en": "import requests\nreturn requests.get('https://example.com').status_code"
+            }
+          },
+          {
+            "name": "argument",
+            "type": "text",
+            "title": {
+              "en": "Argument (optional)",
+              "nl": "Argument (optioneel)"
+            },
+            "placeholder": {
+              "en": "Value passed as `args`"
+            },
+            "required": false
           },
           {
             "name": "requirements",
@@ -73,17 +143,18 @@
             },
             "placeholder": {
               "en": "requests==2.31.0\nnumpy>=1.26.0"
-            },
-            "required": false
+            }
           },
           {
-            "name": "sandbox",
-            "type": "checkbox",
+            "name": "venv_name",
+            "type": "autocomplete",
             "title": {
-              "en": "Sandboxed (RestrictedPython)",
-              "nl": "Sandbox (RestrictedPython)"
+              "en": "Environment name",
+              "nl": "Omgevingsnaam"
             },
-            "default": true
+            "placeholder": {
+              "en": "my-env"
+            }
           },
           {
             "name": "timeout",
@@ -109,102 +180,6 @@
               "nl": "Returnwaarde"
             },
             "example": "42"
-          },
-          {
-            "name": "error",
-            "type": "string",
-            "title": {
-              "en": "Error",
-              "nl": "Fout"
-            },
-            "example": "ValueError: ..."
-          }
-        ],
-        "id": "run_script"
-      },
-      {
-        "title": {
-          "en": "Run Script with Argument",
-          "nl": "Script uitvoeren met argument"
-        },
-        "highlight": true,
-        "args": [
-          {
-            "name": "argument",
-            "type": "text",
-            "title": {
-              "en": "Argument",
-              "nl": "Argument"
-            },
-            "placeholder": {
-              "en": "Value passed as `args` in script"
-            }
-          },
-          {
-            "name": "script",
-            "type": "code",
-            "title": {
-              "en": "Script",
-              "nl": "Script"
-            },
-            "placeholder": {
-              "en": "# args contains the argument\nreturn args.upper()"
-            }
-          },
-          {
-            "name": "requirements",
-            "type": "code",
-            "title": {
-              "en": "Requirements (pip format)",
-              "nl": "Requirements (pip-formaat)"
-            },
-            "placeholder": {
-              "en": "requests==2.31.0"
-            },
-            "required": false
-          },
-          {
-            "name": "sandbox",
-            "type": "checkbox",
-            "title": {
-              "en": "Sandboxed (RestrictedPython)",
-              "nl": "Sandbox (RestrictedPython)"
-            },
-            "default": true
-          },
-          {
-            "name": "timeout",
-            "type": "number",
-            "title": {
-              "en": "Timeout (seconds)",
-              "nl": "Time-out (seconden)"
-            },
-            "placeholder": {
-              "en": "30"
-            },
-            "min": 1,
-            "max": 300,
-            "required": false
-          }
-        ],
-        "tokens": [
-          {
-            "name": "return_value",
-            "type": "string",
-            "title": {
-              "en": "Return value",
-              "nl": "Returnwaarde"
-            },
-            "example": "42"
-          },
-          {
-            "name": "error",
-            "type": "string",
-            "title": {
-              "en": "Error",
-              "nl": "Fout"
-            },
-            "example": "ValueError: ..."
           }
         ],
         "id": "run_script_with_argument"

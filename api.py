@@ -17,7 +17,7 @@ async def delete_venv(homey, **kwargs):
     uid = (kwargs.get('uid')
            or (kwargs.get('body') or {}).get('uid')
            or '')
-    if not uid or not re.match(r'^[\w\-\.]+$', str(uid)) or '..' in str(uid):
+    if not uid or not re.match(r'^[\w\-]+$', str(uid)):
         raise ValueError(f"Invalid uid: {uid!r} (kwargs={list(kwargs.keys())})")
     vm = VenvManager(venv_root=_VENV_ROOT)
     vm.delete(str(uid))
