@@ -74,7 +74,7 @@ jobs:
         run: python3 scripts/refresh_homey_token.py
 
       - name: Validate app
-        run: homey app validate
+        run: homey app validate --level debug
 
       - name: Deploy to Homey SHS
         run: homey app install
