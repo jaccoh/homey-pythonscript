@@ -1,38 +1,31 @@
 {
-  "title": { "en": "Run Script with Argument", "nl": "Script uitvoeren met argument" },
+  "title": { "en": "Run Script with Packages", "nl": "Script uitvoeren met packages" },
   "highlight": true,
   "args": [
-    {
-      "name": "argument",
-      "type": "text",
-      "title": { "en": "Argument", "nl": "Argument" },
-      "placeholder": { "en": "Value passed as `args` in script" }
-    },
     {
       "name": "script",
       "type": "code",
       "title": { "en": "Script", "nl": "Script" },
-      "placeholder": { "en": "# args contains the argument\nreturn args.upper()" }
+      "placeholder": { "en": "import requests\nreturn requests.get('https://example.com').status_code" }
+    },
+    {
+      "name": "argument",
+      "type": "text",
+      "title": { "en": "Argument (optional)", "nl": "Argument (optioneel)" },
+      "placeholder": { "en": "Value passed as `args`" },
+      "required": false
     },
     {
       "name": "requirements",
       "type": "code",
       "title": { "en": "Requirements (pip format)", "nl": "Requirements (pip-formaat)" },
-      "placeholder": { "en": "requests==2.31.0" },
-      "required": false
+      "placeholder": { "en": "requests==2.31.0\nnumpy>=1.26.0" }
     },
     {
       "name": "venv_name",
       "type": "autocomplete",
       "title": { "en": "Environment name", "nl": "Omgevingsnaam" },
-      "placeholder": { "en": "my-env (required when using requirements)" },
-      "required": false
-    },
-    {
-      "name": "sandbox",
-      "type": "checkbox",
-      "title": { "en": "Sandboxed (RestrictedPython)", "nl": "Sandbox (RestrictedPython)" },
-      "default": true
+      "placeholder": { "en": "my-env" }
     },
     {
       "name": "timeout",
@@ -45,7 +38,6 @@
     }
   ],
   "tokens": [
-    { "name": "return_value", "type": "string", "title": { "en": "Return value", "nl": "Returnwaarde" }, "example": "42" },
-    { "name": "error", "type": "string", "title": { "en": "Error", "nl": "Fout" }, "example": "ValueError: ..." }
+    { "name": "return_value", "type": "string", "title": { "en": "Return value", "nl": "Returnwaarde" }, "example": "42" }
   ]
 }

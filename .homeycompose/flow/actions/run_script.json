@@ -6,27 +6,14 @@
       "name": "script",
       "type": "code",
       "title": { "en": "Script", "nl": "Script" },
-      "placeholder": { "en": "homey.set_tag('result', 42)\nreturn 'done'" }
+      "placeholder": { "en": "return 42" }
     },
     {
-      "name": "requirements",
-      "type": "code",
-      "title": { "en": "Requirements (pip format)", "nl": "Requirements (pip-formaat)" },
-      "placeholder": { "en": "requests==2.31.0\nnumpy>=1.26.0" },
+      "name": "argument",
+      "type": "text",
+      "title": { "en": "Argument (optional)", "nl": "Argument (optioneel)" },
+      "placeholder": { "en": "Value passed as `args`" },
       "required": false
-    },
-    {
-      "name": "venv_name",
-      "type": "autocomplete",
-      "title": { "en": "Environment name", "nl": "Omgevingsnaam" },
-      "placeholder": { "en": "my-env (required when using requirements)" },
-      "required": false
-    },
-    {
-      "name": "sandbox",
-      "type": "checkbox",
-      "title": { "en": "Sandboxed (RestrictedPython)", "nl": "Sandbox (RestrictedPython)" },
-      "default": true
     },
     {
       "name": "timeout",
@@ -39,7 +26,6 @@
     }
   ],
   "tokens": [
-    { "name": "return_value", "type": "string", "title": { "en": "Return value", "nl": "Returnwaarde" }, "example": "42" },
-    { "name": "error", "type": "string", "title": { "en": "Error", "nl": "Fout" }, "example": "ValueError: ..." }
+    { "name": "return_value", "type": "string", "title": { "en": "Return value", "nl": "Returnwaarde" }, "example": "42" }
   ]
 }

@@ -22,41 +22,49 @@ class PythonScriptApp(homey_app.App):
         self._vm = VenvManager(venv_root=_VENV_ROOT)
         self._executor = Executor(sdk=self.homey, venv_root=_VENV_ROOT)
 
-        for card_id in ("run_script", "run_script_with_argument"):
-            card = self.homey.flow.get_action_card(card_id)
-            if card_id == "run_script":
-                card.register_run_listener(self._on_run_script)
-            else:
-                card.register_run_listener(self._on_run_script_with_argument)
-            venv_arg = card.get_argument("venv_name")
-            venv_arg.register_autocomplete_listener(self._autocomplete_venv_name)
+        # Card 1: Run Script — sandboxed, optional arg, no requirements
+        sandboxed_card = self.homey.flow.get_action_card("run_script")
+        sandboxed_card.register_run_listener(self._on_run_sandboxed)
+
+        # Card 2: Run Script with Packages — Runner, optional arg, requirements + venv
+        packages_card = self.homey.flow.get_action_card("run_script_with_argument")
+        packages_card.register_run_listener(self._on_run_with_packages)
+        packages_card.get_argument("venv_name").register_autocomplete_listener(
+            self._autocomplete_venv_name
+        )
 
     async def _autocomplete_venv_name(self, query, **_):
-        """Return existing venv names + 'Create new' option for novel query."""
-        existing = [v["card_uid"] for v in self._vm.list_venvs()]
+        existing = [v["name"] for v in self._vm.list_venvs()]
         results = [
             {"name": name, "description": "existing environment"}
             for name in existing
             if not query or query.lower() in name.lower()
         ]
-        # Offer creating a new name if query looks valid and not already present
         if query and _VENV_NAME_RE.match(query) and query not in existing:
             results.insert(0, {"name": query, "description": "create new environment"})
         return results
 
-    async def _on_run_script(self, card_arguments, **_) -> dict:
-        return await self._execute(card_arguments, args=None)
-
-    async def _on_run_script_with_argument(self, card_arguments, **_) -> dict:
-        return await self._execute(card_arguments, args=card_arguments.get("argument"))
-
-    async def _execute(self, card_arguments: dict, args) -> dict:
+    async def _on_run_sandboxed(self, card_arguments, **_) -> dict:
         script = card_arguments.get("script", "")
-        requirements = card_arguments.get("requirements", "") or ""
-        sandbox = card_arguments.get("sandbox", True)
+        args = card_arguments.get("argument") or None
         timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
 
-        # venv_name from autocomplete field; may be a dict {"name": ..., "description": ...}
+        result = await self._executor.run(
+            script=script,
+            args=args,
+            sandbox=True,
+            requirements="",
+            timeout=timeout,
+            card_uid="sandboxed",
+        )
+        return result.homey_tokens
+
+    async def _on_run_with_packages(self, card_arguments, **_) -> dict:
+        script = card_arguments.get("script", "")
+        args = card_arguments.get("argument") or None
+        requirements = card_arguments.get("requirements", "") or ""
+        timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
+
         raw_venv = card_arguments.get("venv_name") or ""
         if isinstance(raw_venv, dict):
             raw_venv = raw_venv.get("name", "")
@@ -69,7 +77,7 @@ class PythonScriptApp(homey_app.App):
         result = await self._executor.run(
             script=script,
             args=args,
-            sandbox=sandbox,
+            sandbox=False,
             requirements=requirements,
             timeout=timeout,
             card_uid=card_uid,
