@@ -3,6 +3,10 @@ import platform
 import sys
 from pathlib import Path
 
+sys.stderr.write(f"[DEBUG] exe={sys.executable}\n")
+sys.stderr.write(f"[DEBUG] sys.path={sys.path[:4]}\n")
+sys.stderr.flush()
+
 # Homey SHS does not activate the bundled venv automatically.
 # Inject bundled site-packages into sys.path before any third-party imports.
 _arch = "arm64" if platform.machine() in ("arm64", "aarch64") else "amd64"
