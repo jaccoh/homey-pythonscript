@@ -3,9 +3,7 @@ import platform
 import sys
 from pathlib import Path
 
-sys.stderr.write(f"[DEBUG] exe={sys.executable}\n")
-sys.stderr.write(f"[DEBUG] sys.path={sys.path[:4]}\n")
-sys.stderr.flush()
+sys.stdout = sys.stderr  # redirect SDK's print() errors to stderr for SHS log visibility
 
 # Homey SHS does not activate the bundled venv automatically.
 # Inject bundled site-packages into sys.path before any third-party imports.
