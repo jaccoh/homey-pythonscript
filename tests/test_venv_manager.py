@@ -47,11 +47,11 @@ class TestVenvManagerDelete:
 
 
 class TestVenvManagerList:
-    def test_list_returns_card_uids(self, tmp_venv_dir):
+    def test_list_returns_names(self, tmp_venv_dir):
         vm = VenvManager(venv_root=tmp_venv_dir)
         (tmp_venv_dir / "card-1").mkdir()
         vm._write_hash("card-1", "requests==2.31.0")
         (tmp_venv_dir / "card-2").mkdir()
         vm._write_hash("card-2", "numpy>=1.26")
         entries = vm.list_venvs()
-        assert {e["card_uid"] for e in entries} == {"card-1", "card-2"}
+        assert {e["name"] for e in entries} == {"card-1", "card-2"}
