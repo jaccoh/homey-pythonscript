@@ -41,7 +41,7 @@
     },
     "delete_venv": {
       "method": "DELETE",
-      "path": "/venvs"
+      "path": "/venv"
     }
   },
   "flow": {
