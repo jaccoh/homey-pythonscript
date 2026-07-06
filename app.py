@@ -1,10 +1,14 @@
 import os
+import sys
 from pathlib import Path
 
-from homey import app as homey_app
+# Homey runner may not include the app directory in sys.path.
+sys.path.insert(0, str(Path(__file__).parent))
 
-from pythonscript.executor import Executor
-from pythonscript.venv_manager import VenvManager
+from homey import app as homey_app  # noqa: E402
+
+from pythonscript.executor import Executor  # noqa: E402
+from pythonscript.venv_manager import VenvManager  # noqa: E402
 
 _VENV_ROOT = Path(os.environ.get("VENV_ROOT", "/userdata/venvs"))
 _DEFAULT_TIMEOUT = 30
