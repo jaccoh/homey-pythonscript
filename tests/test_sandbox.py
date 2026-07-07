@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from pythonscript.sandbox import Sandbox, SecurityError
 
@@ -118,6 +119,37 @@ class TestSandboxErrors:
         sb = Sandbox()
         result = await sb.run("return args", args="hello")
         assert result["return_value"] == "hello"
+
+
+class TestSandboxNonBlocking:
+    @pytest.mark.asyncio
+    async def test_sandbox_exec_does_not_block_event_loop(self):
+        """A CPU-intensive sandbox script should not block the event loop."""
+        sb = Sandbox()
+        tick_count = 0
+
+        async def ticker():
+            nonlocal tick_count
+            for _ in range(5):
+                await asyncio.sleep(0.01)
+                tick_count += 1
+
+        ticker_task = asyncio.create_task(ticker())
+        # CPU-heavy computation using only sandbox-safe builtins (sum is not in safe_builtins).
+        # 10M iterations ensures ~100-200ms on fast hardware, long enough for ≥3 ticks at 10ms.
+        script = "x = 0\nfor i in range(10_000_000):\n    x = x + i\nreturn x"
+        await sb.run(script=script, homey=None, args=None)
+        # Snapshot tick_count IMMEDIATELY after sandbox returns, before giving ticker more time.
+        # With blocking exec: ticker never ran concurrently → 0 ticks here.
+        # With asyncio.to_thread: ticker ran concurrently → ≥3 ticks here.
+        ticks_during_run = tick_count
+        ticker_task.cancel()
+        try:
+            await ticker_task
+        except asyncio.CancelledError:
+            pass
+
+        assert ticks_during_run >= 3, f"Event loop was blocked: only {ticks_during_run} ticks during sandbox execution"
 
 
 class _MockHomey:

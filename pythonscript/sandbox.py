@@ -1,3 +1,4 @@
+import asyncio
 import operator
 import textwrap
 from RestrictedPython import compile_restricted_function, safe_builtins
@@ -6,6 +7,11 @@ from RestrictedPython.Guards import safer_getattr, full_write_guard
 
 class SecurityError(Exception):
     pass
+
+
+def _exec_and_call(code, namespace, func_name, homey, args):
+    exec(code, namespace)
+    return namespace[func_name](homey, args)
 
 
 _ALLOWED_IMPORTS = frozenset({
@@ -81,7 +87,8 @@ class Sandbox:
             "_write_": full_write_guard,
         }
 
-        exec(result.code, namespace)
-        return_value = namespace[_FUNC_NAME](homey, args)
+        return_value = await asyncio.to_thread(
+            _exec_and_call, result.code, namespace, _FUNC_NAME, homey, args
+        )
         tags = dict(homey._tags) if homey is not None else {}
         return {"return_value": return_value, "tags": tags}
