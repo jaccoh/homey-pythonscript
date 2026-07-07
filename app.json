@@ -28,6 +28,12 @@
   "author": {
     "name": "Jacco Hoeve"
   },
+  "bugs": {
+    "url": "https://github.com/jaccoh/homey-pythonscript/issues"
+  },
+  "homepage": "https://github.com/jaccoh/homey-pythonscript",
+  "support": "https://community.homey.app/t/app-pro-python-script/157001",
+  "source": "https://github.com/jaccoh/homey-pythonscript",
   "pythonPackages": [
     "restrictedpython>=7.0.0"
   ],
