@@ -57,10 +57,12 @@ class Runner:
                     case "return":
                         return_value = msg["value"]
                     case "error":
-                        # Include exception type from traceback so callers can
-                        # match on the exception class name (e.g. "ZeroDivisionError")
                         tb = msg.get("traceback", "")
-                        error = f"{tb.strip()}" if tb else msg["message"]
+                        if tb:
+                            # last line of traceback: "ExceptionType: message"
+                            error = tb.strip().split("\n")[-1]
+                        else:
+                            error = msg["message"]
                     case "call":
                         try:
                             response = await self._dispatch(msg["method"], msg["args"])
