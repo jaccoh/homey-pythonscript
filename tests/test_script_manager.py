@@ -49,3 +49,13 @@ def test_list_returns_only_py_files(tmp_scripts):
 def test_scripts_root_missing_returns_empty():
     sm = ScriptManager(scripts_root=Path("/nonexistent/path"))
     assert sm.list_scripts() == []
+
+
+def test_invalid_name_raises(tmp_scripts):
+    with pytest.raises(ValueError):
+        tmp_scripts.save_script("../evil", "pass")
+
+
+def test_name_with_dot_raises(tmp_scripts):
+    with pytest.raises(ValueError):
+        tmp_scripts.save_script("foo.bar", "pass")
