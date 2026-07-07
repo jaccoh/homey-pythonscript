@@ -42,6 +42,26 @@
     "delete_venv": {
       "method": "POST",
       "path": "/venv-delete"
+    },
+    "scripts": {
+      "method": "GET",
+      "path": "/scripts"
+    },
+    "get_script": {
+      "method": "POST",
+      "path": "/script-get"
+    },
+    "save_script": {
+      "method": "POST",
+      "path": "/script-save"
+    },
+    "delete_script": {
+      "method": "POST",
+      "path": "/script-delete"
+    },
+    "run_script_api": {
+      "method": "POST",
+      "path": "/script-run"
     }
   },
   "flow": {
