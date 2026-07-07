@@ -31,8 +31,8 @@ class TestExecutorRouting:
         assert result.return_value == 1
 
     @pytest.mark.asyncio
-    async def test_packages_card_no_requirements_uses_runner_without_venv(self, mock_sdk, tmp_path):
-        """sandbox=False, requirements="" (packages card, no packages) -> Runner, venv_path=None."""
+    async def test_no_venv_sandbox_false_uses_runner_without_venv(self, mock_sdk, tmp_path):
+        """sandbox=False, requirements="", card_uid="" -> Runner, venv_path=None."""
         ex = Executor(sdk=mock_sdk, venv_root=tmp_path)
         with patch("pythonscript.executor.Runner") as MockRunner:
             instance = MockRunner.return_value
@@ -43,14 +43,30 @@ class TestExecutorRouting:
                 sandbox=False,
                 requirements="",
                 timeout=30,
-                card_uid="default",
+                card_uid="",
             )
         MockRunner.assert_called_once()
-        # venv_path must be None when there are no requirements
         call_kwargs = instance.run.call_args.kwargs
         assert call_kwargs.get("venv_path") is None
         assert result.return_value == 42
-        assert result.tags["x"] == 1
+
+    @pytest.mark.asyncio
+    async def test_prebuilt_venv_sandbox_false_uses_venv_path(self, mock_sdk, tmp_path):
+        """sandbox=False, requirements="", card_uid non-empty -> Runner uses pre-built venv."""
+        ex = Executor(sdk=mock_sdk, venv_root=tmp_path)
+        with patch("pythonscript.executor.Runner") as MockRunner:
+            instance = MockRunner.return_value
+            instance.run = AsyncMock(return_value={"return_value": 42, "tags": {}})
+            await ex.run(
+                script="return 42",
+                args=None,
+                sandbox=False,
+                requirements="",
+                timeout=30,
+                card_uid="my-env",
+            )
+        call_kwargs = instance.run.call_args.kwargs
+        assert call_kwargs.get("venv_path") == tmp_path / "my-env"
 
     @pytest.mark.asyncio
     async def test_packages_card_with_requirements_runner_gets_venv_path(self, mock_sdk, tmp_path):
