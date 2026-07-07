@@ -39,6 +39,4 @@ class ScriptManager:
 
     def delete_script(self, name: str) -> None:
         self._validate_name(name)
-        path = self.script_path(name)
-        if path.exists():
-            path.unlink()
+        self.script_path(name).unlink(missing_ok=True)
