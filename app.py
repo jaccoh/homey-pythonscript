@@ -9,9 +9,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 from homey import app as homey_app  # noqa: E402
 
 from pythonscript.executor import Executor  # noqa: E402
+from pythonscript.script_manager import ScriptManager  # noqa: E402
 from pythonscript.venv_manager import VenvManager  # noqa: E402
 
 _VENV_ROOT = Path(os.environ.get("VENV_ROOT", "/userdata/venvs"))
+_SCRIPTS_ROOT = Path(os.environ.get("SCRIPTS_ROOT", "/userdata/scripts"))
 _DEFAULT_TIMEOUT = 30
 _VENV_NAME_RE = re.compile(r'^[\w\-]+$')
 
@@ -33,6 +35,20 @@ class PythonScriptApp(homey_app.App):
             self._autocomplete_venv_name
         )
 
+        # Card 3: Run Named Script — sandboxed, selects a saved script by name
+        named_card = self.homey.flow.get_action_card("run_named_script")
+        named_card.register_run_listener(self._on_run_named)
+        named_card.get_argument("script_name").register_autocomplete_listener(
+            self._autocomplete_script_name
+        )
+
+        # Card 4: Run Named Script with Argument — sandboxed, saved script + arg
+        named_arg_card = self.homey.flow.get_action_card("run_named_script_with_argument")
+        named_arg_card.register_run_listener(self._on_run_named_with_argument)
+        named_arg_card.get_argument("script_name").register_autocomplete_listener(
+            self._autocomplete_script_name
+        )
+
     async def _autocomplete_venv_name(self, query, **_):
         existing = [v["name"] for v in self._vm.list_venvs()]
         results = [
@@ -47,6 +63,46 @@ class PythonScriptApp(homey_app.App):
     async def _on_run_sandboxed(self, card_arguments, **_) -> dict:
         script = card_arguments.get("script", "")
         args = card_arguments.get("argument") or None
+        timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
+
+        result = await self._executor.run(
+            script=script,
+            args=args,
+            sandbox=True,
+            requirements="",
+            timeout=timeout,
+            card_uid="sandboxed",
+        )
+        return result.homey_tokens
+
+    async def _autocomplete_script_name(self, query, **_):
+        sm = ScriptManager(scripts_root=_SCRIPTS_ROOT)
+        scripts = sm.list_scripts()
+        return [
+            {"name": s["name"], "description": f"{s['size']} bytes"}
+            for s in scripts
+            if not query or query.lower() in s["name"].lower()
+        ]
+
+    async def _on_run_named(self, card_arguments, **_) -> dict:
+        return await self._execute_named(card_arguments, args=None)
+
+    async def _on_run_named_with_argument(self, card_arguments, **_) -> dict:
+        return await self._execute_named(
+            card_arguments, args=card_arguments.get("argument") or None
+        )
+
+    async def _execute_named(self, card_arguments: dict, args) -> dict:
+        raw_name = card_arguments.get("script_name") or ""
+        if isinstance(raw_name, dict):
+            raw_name = raw_name.get("name", "")
+        script_name = str(raw_name).strip()
+
+        if not script_name:
+            raise ValueError("Script name is required")
+
+        sm = ScriptManager(scripts_root=_SCRIPTS_ROOT)
+        script = sm.get_script(script_name)
         timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
 
         result = await self._executor.run(
