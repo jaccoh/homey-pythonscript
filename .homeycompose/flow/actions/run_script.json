@@ -1,5 +1,6 @@
 {
   "title": { "en": "Run Script", "nl": "Script uitvoeren" },
+  "titleFormatted": { "en": "Run script (sandboxed)", "nl": "Voer script uit (sandbox)" },
   "highlight": true,
   "args": [
     {

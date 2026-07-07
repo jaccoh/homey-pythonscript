@@ -75,6 +75,10 @@
           "en": "Run Named Script",
           "nl": "Bewaard script uitvoeren"
         },
+        "titleFormatted": {
+          "en": "Run script [[script_name]]",
+          "nl": "Voer script [[script_name]] uit"
+        },
         "highlight": true,
         "args": [
           {
@@ -118,6 +122,10 @@
         "title": {
           "en": "Run Script",
           "nl": "Script uitvoeren"
+        },
+        "titleFormatted": {
+          "en": "Run script (sandboxed)",
+          "nl": "Voer script uit (sandbox)"
         },
         "highlight": true,
         "args": [
@@ -176,6 +184,10 @@
         "title": {
           "en": "Run Script with Packages",
           "nl": "Script uitvoeren met packages"
+        },
+        "titleFormatted": {
+          "en": "Run script with packages in [[venv_name]]",
+          "nl": "Voer script uit met packages in [[venv_name]]"
         },
         "highlight": true,
         "args": [
