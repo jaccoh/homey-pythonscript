@@ -220,7 +220,8 @@
       var popup = document.getElementById('new-popup');
       var r = btn.getBoundingClientRect();
       popup.style.top = (r.bottom + 4) + 'px';
-      popup.style.left = r.left + 'px';
+      popup.style.left = 'auto';
+      popup.style.right = Math.max(4, window.innerWidth - r.right) + 'px';
       popup.style.display = 'flex';
       _newPopupOpen = true;
       document.getElementById('new-name-input').value = '';
@@ -416,7 +417,8 @@
       var popup = document.getElementById('venv-new-popup');
       var r = btn.getBoundingClientRect();
       popup.style.top = (r.bottom + 4) + 'px';
-      popup.style.left = r.left + 'px';
+      popup.style.left = 'auto';
+      popup.style.right = Math.max(4, window.innerWidth - r.right) + 'px';
       popup.style.display = 'flex';
       _venvNewPopupOpen = true;
       document.getElementById('venv-new-name-input').value = '';
@@ -436,7 +438,11 @@
       errEl.style.display = 'none';
       closeVenvNewPopup();
       _currentVenv = name;
-      document.getElementById('venv-env-select').value = '';
+      var sel = document.getElementById('venv-env-select');
+      var found = false;
+      for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === name) { found = true; break; } }
+      if (!found) { var opt = document.createElement('option'); opt.value = name; opt.textContent = name; sel.appendChild(opt); }
+      sel.value = name;
       updateVenvDelBtn();
       document.getElementById('venv-req-area').value = '';
       setVenvStatus('New: ' + name + ' (not yet built)');
