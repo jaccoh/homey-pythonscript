@@ -35,17 +35,10 @@ class PythonScriptApp(homey_app.App):
             self._autocomplete_venv_name
         )
 
-        # Card 3: Run Named Script — sandboxed, selects a saved script by name
+        # Card 3: Run Named Script — sandbox/venv config stored in IDE meta
         named_card = self.homey.flow.get_action_card("run_named_script")
         named_card.register_run_listener(self._on_run_named)
         named_card.get_argument("script_name").register_autocomplete_listener(
-            self._autocomplete_script_name
-        )
-
-        # Card 4: Run Named Script with Argument — sandboxed, saved script + arg
-        named_arg_card = self.homey.flow.get_action_card("run_named_script_with_argument")
-        named_arg_card.register_run_listener(self._on_run_named_with_argument)
-        named_arg_card.get_argument("script_name").register_autocomplete_listener(
             self._autocomplete_script_name
         )
 
@@ -85,9 +78,6 @@ class PythonScriptApp(homey_app.App):
         ]
 
     async def _on_run_named(self, card_arguments, **_) -> dict:
-        return await self._execute_named(card_arguments, args=None)
-
-    async def _on_run_named_with_argument(self, card_arguments, **_) -> dict:
         return await self._execute_named(
             card_arguments, args=card_arguments.get("argument") or None
         )
@@ -106,15 +96,18 @@ class PythonScriptApp(homey_app.App):
             script = sm.get_script(script_name)
         except FileNotFoundError:
             raise ValueError(f"Script not found: {script_name!r}")
+        meta = sm.get_meta(script_name)
+        use_sandbox = meta.get("sandbox", True)
+        venv_name = meta.get("venv") or ""
         timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
 
         result = await self._executor.run(
             script=script,
             args=args,
-            sandbox=True,
+            sandbox=use_sandbox,
             requirements="",
             timeout=timeout,
-            card_uid="sandboxed",
+            card_uid=venv_name if not use_sandbox else "sandboxed",
         )
         return result.homey_tokens
 

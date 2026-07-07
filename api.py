@@ -50,8 +50,10 @@ async def get_script(homey, **kwargs):
     name = str(body.get('name') or kwargs.get('name') or '')
     if not name or not _NAME_RE.fullmatch(name):
         raise ValueError(f"Invalid script name: {name!r}")
-    code = _sm().get_script(name)
-    return {"name": name, "code": code}
+    sm = _sm()
+    code = sm.get_script(name)
+    meta = sm.get_meta(name)
+    return {"name": name, "code": code, "sandbox": meta.get("sandbox", True), "venv": meta.get("venv")}
 
 
 async def save_script(homey, **kwargs):
@@ -60,7 +62,15 @@ async def save_script(homey, **kwargs):
     code = str(body.get('code') or kwargs.get('code') or '')
     if not name or not _NAME_RE.fullmatch(name):
         raise ValueError(f"Invalid script name: {name!r}")
-    _sm().save_script(name, code)
+    sandbox = body.get('sandbox')
+    sandbox = True if sandbox is None else bool(sandbox)
+    raw_venv = body.get('venv') or ''
+    venv = str(raw_venv).strip() if raw_venv else None
+    if venv and not _NAME_RE.fullmatch(venv):
+        raise ValueError(f"Invalid venv name: {venv!r}")
+    sm = _sm()
+    sm.save_script(name, code)
+    sm.save_meta(name, {"sandbox": sandbox, "venv": venv})
     return None
 
 
@@ -74,22 +84,26 @@ async def delete_script(homey, **kwargs):
 
 
 async def run_script_api(homey, **kwargs):
-    """Run a named script from the settings page IDE (sandboxed)."""
     from pythonscript.executor import Executor
     body = kwargs.get('body') or {}
     name = str(body.get('name') or kwargs.get('name') or '')
     args = body.get('args') or kwargs.get('args') or None
     timeout = int(body.get('timeout') or kwargs.get('timeout') or 30)
+    sandbox = body.get('sandbox')
+    sandbox = True if sandbox is None else bool(sandbox)
+    venv_name = str(body.get('venv') or '').strip()
     if not name or not _NAME_RE.fullmatch(name):
         raise ValueError(f"Invalid script name: {name!r}")
+    if venv_name and not _NAME_RE.fullmatch(venv_name):
+        raise ValueError(f"Invalid venv name: {venv_name!r}")
     code = _sm().get_script(name)
     executor = Executor(sdk=homey, venv_root=_VENV_ROOT)
     result = await executor.run(
         script=code,
         args=args,
-        sandbox=True,
+        sandbox=sandbox,
         requirements="",
         timeout=timeout,
-        card_uid="sandboxed",
+        card_uid=venv_name if not sandbox else "sandboxed",
     )
     return result.homey_tokens

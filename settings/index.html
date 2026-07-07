@@ -22,6 +22,11 @@
     #args-input { flex: 1; }
     #editor-status { font-size: 11px; color: #888; white-space: nowrap; }
 
+    /* sandbox + venv row */
+    #sandbox-label { font-size: 12px; white-space: nowrap; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+    #sandbox-label input[type=checkbox] { margin: 0; cursor: pointer; }
+    #venv-select { font-size: 12px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; min-width: 80px; flex: 1; }
+
     /* New-script popup */
     #new-popup {
       display: none; position: fixed; z-index: 200;
@@ -67,11 +72,23 @@
 
   <!-- Scripts tab -->
   <div class="panel active" id="tab-scripts">
+    <!-- Row 1: script picker -->
     <div class="script-toolbar">
       <select id="script-select"><option value="">-- select script --</option></select>
       <button id="new-btn">+ New</button>
       <button id="del-script-btn" style="color:#c00;display:none">Delete</button>
     </div>
+    <!-- Row 2: execution mode -->
+    <div class="script-toolbar" style="border-top:none">
+      <label id="sandbox-label">
+        <input type="checkbox" id="sandbox-cb" checked>
+        Sandbox
+      </label>
+      <select id="venv-select" style="display:none">
+        <option value="">-- no venv --</option>
+      </select>
+    </div>
+    <!-- Row 3: run controls -->
     <div class="script-toolbar" style="border-top:none">
       <input id="args-input" placeholder="args (optional)" autocomplete="off" spellcheck="false">
       <button id="save-btn">Save</button>
@@ -149,7 +166,31 @@
     }
     function clearOutput() { document.getElementById('output-panel').innerHTML = ''; }
 
-    // Dropdown
+    // Sandbox / venv visibility
+    var sandboxCb = document.getElementById('sandbox-cb');
+    var venvSel = document.getElementById('venv-select');
+
+    function updateVenvRow() {
+      venvSel.style.display = sandboxCb.checked ? 'none' : '';
+    }
+
+    sandboxCb.addEventListener('change', updateVenvRow);
+
+    function loadVenvOptions(selectName) {
+      _H.api('GET', '/venvs').then(function(venvs) {
+        var prev = selectName !== undefined ? selectName : venvSel.value;
+        venvSel.innerHTML = '<option value="">-- no venv --</option>';
+        (venvs || []).forEach(function(v) {
+          var opt = document.createElement('option');
+          opt.value = v.name;
+          opt.textContent = v.name;
+          if (v.name === prev) opt.selected = true;
+          venvSel.appendChild(opt);
+        });
+      });
+    }
+
+    // Script dropdown
     function loadScriptList(selectName) {
       _H.api('GET', '/scripts').then(function(scripts) {
         var sel = document.getElementById('script-select');
@@ -178,6 +219,9 @@
       _H.api('POST', '/script-get', {name: name}).then(function(result) {
         currentScript = name;
         if (editor) editor.setValue(result.code || '');
+        sandboxCb.checked = result.sandbox !== false;
+        venvSel.value = result.venv || '';
+        updateVenvRow();
         clearOutput();
         setStatus('');
       }).catch(function(e) { setStatus('Open failed: ' + (e.message || e)); });
@@ -217,6 +261,9 @@
       currentScript = name;
       document.getElementById('script-select').value = '';
       updateDelBtn();
+      sandboxCb.checked = true;
+      venvSel.value = '';
+      updateVenvRow();
       if (editor) editor.setValue('# ' + name + '\nreturn 42');
       clearOutput();
       setStatus('New: ' + name + ' (unsaved)');
@@ -226,14 +273,11 @@
       e.stopPropagation();
       if (_newPopupOpen) { closeNewPopup(); } else { openNewPopup(); }
     });
-
     document.getElementById('new-create-btn').addEventListener('click', commitNewScript);
-
     document.getElementById('new-name-input').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') commitNewScript();
       if (e.key === 'Escape') closeNewPopup();
     });
-
     document.addEventListener('click', function(e) {
       if (_newPopupOpen && !document.getElementById('new-popup').contains(e.target)) {
         closeNewPopup();
@@ -264,11 +308,18 @@
       }
     });
 
+    function currentMeta() {
+      return {
+        sandbox: sandboxCb.checked,
+        venv: sandboxCb.checked ? null : (venvSel.value || null),
+      };
+    }
+
     // Save
     document.getElementById('save-btn').addEventListener('click', function() {
       if (!currentScript) { setStatus('Create or select a script first'); return; }
-      var code = editor ? editor.getValue() : '';
-      _H.api('POST', '/script-save', {name: currentScript, code: code}).then(function() {
+      var meta = currentMeta();
+      _H.api('POST', '/script-save', {name: currentScript, code: editor ? editor.getValue() : '', sandbox: meta.sandbox, venv: meta.venv}).then(function() {
         setStatus('Saved');
         loadScriptList(currentScript);
       }).catch(function(e) { setStatus('Save failed: ' + (e.message || e)); });
@@ -277,13 +328,13 @@
     // Run
     document.getElementById('run-btn').addEventListener('click', function() {
       if (!currentScript) { setStatus('Create or select a script first'); return; }
-      var code = editor ? editor.getValue() : '';
+      var meta = currentMeta();
       var args = document.getElementById('args-input').value.trim() || null;
       clearOutput();
       setStatus('Saving...');
-      _H.api('POST', '/script-save', {name: currentScript, code: code}).then(function() {
+      _H.api('POST', '/script-save', {name: currentScript, code: editor ? editor.getValue() : '', sandbox: meta.sandbox, venv: meta.venv}).then(function() {
         setStatus('Running...');
-        return _H.api('POST', '/script-run', {name: currentScript, args: args});
+        return _H.api('POST', '/script-run', {name: currentScript, args: args, sandbox: meta.sandbox, venv: meta.venv});
       }).then(function(result) {
         if (result && result.error) {
           appendOutput('Error: ' + result.error, 'output-error');
@@ -299,7 +350,7 @@
       });
     });
 
-    // Venvs
+    // Venvs tab
     function setBuildStatus(msg, isErr) {
       var el = document.getElementById('venv-build-status');
       el.textContent = msg;
@@ -314,6 +365,7 @@
       _H.api('POST', '/venv-build', {name: name, requirements: req}).then(function() {
         setBuildStatus('Built: ' + name);
         loadVenvList();
+        loadVenvOptions('');
       }).catch(function(e) { setBuildStatus('Build failed: ' + (e.message || e), true); });
     });
 
@@ -328,7 +380,10 @@
         if (_confirm) {
           clearTimeout(_confirm); _confirm = null; btn.textContent = 'Delete';
           btn.disabled = true;
-          _H.api('POST', '/venv-delete', {uid: v.name}).then(loadVenvList).catch(function(e) {
+          _H.api('POST', '/venv-delete', {uid: v.name}).then(function() {
+            loadVenvList();
+            loadVenvOptions('');
+          }).catch(function(e) {
             document.getElementById('venv-list-error').textContent = 'Delete failed: ' + (e.message || e);
             btn.disabled = false;
           });
@@ -371,6 +426,7 @@
           wordWrap: 'on',
         });
         loadScriptList('');
+        loadVenvOptions('');
       });
     }
 

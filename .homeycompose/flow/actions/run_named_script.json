@@ -9,12 +9,10 @@
       "placeholder": { "en": "Select a saved script" }
     },
     {
-      "name": "timeout",
-      "type": "number",
-      "title": { "en": "Timeout (seconds)", "nl": "Time-out (seconden)" },
-      "placeholder": { "en": "30" },
-      "min": 1,
-      "max": 300,
+      "name": "argument",
+      "type": "text",
+      "title": { "en": "Argument (optional)", "nl": "Argument (optioneel)" },
+      "placeholder": { "en": "Value passed as `args`" },
       "required": false
     }
   ],

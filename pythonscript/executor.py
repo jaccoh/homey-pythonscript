@@ -39,7 +39,7 @@ class Executor:
         has_requirements = bool(requirements.strip())
 
         if has_requirements or not sandbox:
-            venv_path = self._vm.venv_path(card_uid) if has_requirements else None
+            venv_path = self._vm.venv_path(card_uid) if (has_requirements or (not sandbox and card_uid)) else None
             runner = Runner(sdk=self._sdk)
             raw = await runner.run(
                 script=script,
