@@ -1,0 +1,10 @@
+tests/
+docs/
+scripts/
+CLAUDE.md
+TODO.md
+*.pyc
+__pycache__/
+.homeybuild/
+uv.lock
+.superpowers/

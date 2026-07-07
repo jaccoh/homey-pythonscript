@@ -10,6 +10,7 @@ from pathlib import Path
 class VenvManager:
     def __init__(self, venv_root: Path):
         self._root = Path(venv_root)
+        self._locks: dict[str, asyncio.Lock] = {}
 
     def _hash(self, requirements: str) -> str:
         return hashlib.sha256(requirements.strip().encode()).hexdigest()
@@ -20,6 +21,11 @@ class VenvManager:
     def _write_hash(self, card_uid: str, requirements: str) -> None:
         (self._root / card_uid).mkdir(parents=True, exist_ok=True)
         self._hash_file(card_uid).write_text(self._hash(requirements))
+
+    def _lock(self, card_uid: str) -> asyncio.Lock:
+        if card_uid not in self._locks:
+            self._locks[card_uid] = asyncio.Lock()
+        return self._locks[card_uid]
 
     def needs_rebuild(self, card_uid: str, requirements: str) -> bool:
         hf = self._hash_file(card_uid)
@@ -51,6 +57,11 @@ class VenvManager:
 
     async def build(self, card_uid: str, requirements: str) -> None:
         """pip install requirements into venvs/{card_uid}/. Raises on failure."""
+        async with self._lock(card_uid):
+            await self._build_unlocked(card_uid, requirements)
+
+    async def _build_unlocked(self, card_uid: str, requirements: str) -> None:
+        """Inner build logic; must only be called while holding _lock(card_uid)."""
         venv_dir = self.venv_path(card_uid)
         venv_dir.mkdir(parents=True, exist_ok=True)
         run = asyncio.get_running_loop().run_in_executor

@@ -61,7 +61,7 @@ jobs:
         run: |
           apk add --no-cache npm python3
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          npm install -g homey@latest --quiet
+          npm install -g homey@4.4.0 --quiet
 
       - name: Restore Homey CLI settings
         env:

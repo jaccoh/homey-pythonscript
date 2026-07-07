@@ -46,6 +46,51 @@ class TestVenvManagerDelete:
         vm.delete("card-does-not-exist")  # must not raise
 
 
+import asyncio
+import pytest
+
+
+@pytest.mark.asyncio
+async def test_concurrent_builds_serialize(tmp_venv_dir):
+    """Two concurrent builds for same uid must serialize via Lock."""
+    vm = VenvManager(venv_root=tmp_venv_dir)
+    call_log = []
+
+    async def fake_build():
+        async with vm._lock("test-uid"):
+            call_log.append("start")
+            await asyncio.sleep(0.02)
+            call_log.append("end")
+
+    await asyncio.gather(fake_build(), fake_build())
+
+    # With lock: ['start', 'end', 'start', 'end']
+    # Without lock: ['start', 'start', 'end', 'end']
+    assert call_log[1] == "end", f"Lock did not serialize: {call_log}"
+
+
+@pytest.mark.asyncio
+async def test_different_uids_do_not_block(tmp_venv_dir):
+    """Builds for different uids must not block each other."""
+    vm = VenvManager(venv_root=tmp_venv_dir)
+    call_log = []
+
+    async def fake_build(uid):
+        async with vm._lock(uid):
+            call_log.append(f"start:{uid}")
+            await asyncio.sleep(0.02)
+            call_log.append(f"end:{uid}")
+
+    await asyncio.gather(fake_build("uid-a"), fake_build("uid-b"))
+
+    # Both should interleave freely (start:a, start:b before end:a or end:b)
+    starts = [i for i, x in enumerate(call_log) if x.startswith("start")]
+    assert len(starts) == 2, f"Expected 2 starts, got: {call_log}"
+    # The two starts should appear before either end (interleaved, not serialized)
+    first_end = next(i for i, x in enumerate(call_log) if x.startswith("end"))
+    assert starts[1] < first_end, f"Different uids serialized unexpectedly: {call_log}"
+
+
 class TestVenvManagerList:
     def test_list_returns_names(self, tmp_venv_dir):
         vm = VenvManager(venv_root=tmp_venv_dir)
