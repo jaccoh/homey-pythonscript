@@ -18,9 +18,13 @@ class VenvManager:
     def _hash_file(self, card_uid: str) -> Path:
         return self._root / card_uid / ".requirements_hash"
 
+    def _requirements_file(self, card_uid: str) -> Path:
+        return self._root / card_uid / ".requirements.txt"
+
     def _write_hash(self, card_uid: str, requirements: str) -> None:
         (self._root / card_uid).mkdir(parents=True, exist_ok=True)
         self._hash_file(card_uid).write_text(self._hash(requirements))
+        self._requirements_file(card_uid).write_text(requirements.strip())
 
     def _lock(self, card_uid: str) -> asyncio.Lock:
         if card_uid not in self._locks:
@@ -46,9 +50,11 @@ class VenvManager:
             if not d.is_dir():
                 continue
             hf = d / ".requirements_hash"
+            rf = d / ".requirements.txt"
             entries.append({
                 "name": d.name,
                 "hash": hf.read_text() if hf.exists() else None,
+                "requirements": rf.read_text() if rf.exists() else "",
             })
         return entries
 
