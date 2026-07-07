@@ -94,7 +94,7 @@
   <script>
     var editor = null;
     var currentScript = null;
-    var Homey = null;
+    var _H = null;
 
     // Tab switching
     document.querySelectorAll('.tab').forEach(function(tab) {
@@ -122,7 +122,7 @@
 
     // Script list
     function loadScriptList() {
-      Homey.api('GET', '/scripts').then(function(scripts) {
+      _H.api('GET', '/scripts').then(function(scripts) {
         var container = document.getElementById('script-list-items');
         container.innerHTML = '';
         (scripts || []).forEach(function(s) {
@@ -149,7 +149,7 @@
     }
 
     function openScript(name) {
-      Homey.api('POST', '/script-get', {name: name}).then(function(result) {
+      _H.api('POST', '/script-get', {name: name}).then(function(result) {
         currentScript = name;
         document.getElementById('script-name-input').value = name;
         if (editor) editor.setValue(result.code || '');
@@ -172,7 +172,7 @@
       var name = document.getElementById('script-name-input').value.trim();
       var code = editor ? editor.getValue() : '';
       if (!name) { setEditorStatus('Enter a name'); return; }
-      Homey.api('POST', '/script-save', {name: name, code: code}).then(function() {
+      _H.api('POST', '/script-save', {name: name, code: code}).then(function() {
         currentScript = name;
         setEditorStatus('Saved');
         loadScriptList();
@@ -185,7 +185,7 @@
         clearTimeout(_delConfirm[name]);
         delete _delConfirm[name];
         btn.textContent = 'x';
-        Homey.api('POST', '/script-delete', {name: name}).then(function() {
+        _H.api('POST', '/script-delete', {name: name}).then(function() {
           if (currentScript === name) newScript();
           loadScriptList();
         }).catch(function(e) { setEditorStatus('Delete failed: ' + (e.message || e)); });
@@ -201,10 +201,10 @@
       if (!name) { setEditorStatus('Save script first'); return; }
       clearOutput();
       setEditorStatus('Saving...');
-      Homey.api('POST', '/script-save', {name: name, code: code}).then(function() {
+      _H.api('POST', '/script-save', {name: name, code: code}).then(function() {
         currentScript = name;
         setEditorStatus('Running...');
-        return Homey.api('POST', '/script-run', {name: name});
+        return _H.api('POST', '/script-run', {name: name});
       }).then(function(result) {
         if (result && result.error) {
           appendOutput('Error: ' + result.error, 'output-error');
@@ -239,7 +239,7 @@
 
     function loadVenvs() {
       document.getElementById('venv-error').textContent = '';
-      Homey.api('GET', '/venvs').then(function(venvs) {
+      _H.api('GET', '/venvs').then(function(venvs) {
         var tbody = document.getElementById('venv-list');
         while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
         if (!venvs || !venvs.length) { document.getElementById('venv-status').textContent = 'No environments.'; return; }
@@ -258,7 +258,7 @@
         delete _venvDelConfirm[uid];
         btn.textContent = 'Delete';
         btn.disabled = true;
-        Homey.api('POST', '/venv-delete', {uid: uid}).then(loadVenvs).catch(function(e) {
+        _H.api('POST', '/venv-delete', {uid: uid}).then(loadVenvs).catch(function(e) {
           document.getElementById('venv-error').textContent = 'Delete failed: ' + (e.message || e);
           btn.disabled = false;
         });
@@ -288,8 +288,8 @@
     }
 
     function onHomeyReady(H) {
-      Homey = H;
-      Homey.ready();
+      _H = H;
+      _H.ready();
       var loaderScript = document.createElement('script');
       loaderScript.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js';
       loaderScript.onload = initMonaco;
