@@ -5,92 +5,293 @@
   <title>Python Script</title>
   <script src="/homey.js" data-origin="settings"></script>
   <style>
-    body { font-family: sans-serif; padding: 16px; color: #333; }
-    h2 { font-size: 16px; margin-bottom: 8px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; color: #333; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 1px solid #ddd; background: #f8f8f8; flex-shrink: 0; }
+    .tab { padding: 10px 20px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; user-select: none; }
+    .tab.active { border-bottom-color: #3572A5; color: #3572A5; font-weight: 600; }
+
+    /* Panels */
+    .panel { display: none; flex: 1; overflow: hidden; }
+    .panel.active { display: flex; flex-direction: column; }
+
+    /* Scripts tab layout */
+    .scripts-layout { display: flex; flex: 1; overflow: hidden; }
+    .script-list { width: 190px; border-right: 1px solid #ddd; overflow-y: auto; display: flex; flex-direction: column; }
+    .script-list-items { flex: 1; overflow-y: auto; }
+    .script-item { padding: 8px 10px; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+    .script-item:hover { background: #f0f0f0; }
+    .script-item.active { background: #e8f0fe; color: #1a56c4; }
+    .script-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .del-btn { color: #c00; background: none; border: none; cursor: pointer; font-size: 11px; padding: 2px 4px; flex-shrink: 0; visibility: hidden; }
+    .script-item:hover .del-btn { visibility: visible; }
+    .new-btn { margin: 8px; padding: 6px 8px; font-size: 12px; cursor: pointer; }
+
+    /* Editor area */
+    .editor-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .editor-toolbar { padding: 6px 10px; border-bottom: 1px solid #ddd; display: flex; gap: 6px; align-items: center; flex-shrink: 0; background: #fafafa; }
+    .editor-toolbar input { font-size: 13px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 3px; width: 160px; }
+    .editor-toolbar button { padding: 4px 10px; font-size: 12px; cursor: pointer; }
+    #editor-status { font-size: 11px; color: #888; margin-left: auto; }
+    #monaco-container { flex: 1; overflow: hidden; }
+    .output-panel { height: 130px; border-top: 1px solid #ddd; background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 12px; overflow-y: auto; padding: 6px 10px; flex-shrink: 0; }
+    .output-line { margin: 1px 0; white-space: pre-wrap; word-break: break-all; }
+    .output-error { color: #f88; }
+    .output-ok { color: #8f8; }
+
+    /* Venvs tab */
+    .venvs-panel { padding: 16px; overflow-y: auto; flex: 1; }
+    h2 { font-size: 15px; margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; }
     th, td { text-align: left; padding: 8px 4px; border-bottom: 1px solid #eee; font-size: 13px; }
     th { font-weight: 600; color: #666; }
-    button.del { background: none; border: none; color: #c00; cursor: pointer; font-size: 13px; padding: 0; }
-    button.del:hover { text-decoration: underline; }
-    #status { font-size: 12px; color: #888; margin-top: 4px; }
-    #error { font-size: 12px; color: #c00; margin-top: 4px; }
+    button.del { background: none; border: none; color: #c00; cursor: pointer; font-size: 13px; }
+    #venv-status { font-size: 12px; color: #888; margin-top: 4px; }
+    #venv-error { font-size: 12px; color: #c00; margin-top: 4px; }
   </style>
 </head>
 <body>
-  <h2>Virtual Environments</h2>
-  <div id="status">Loading...</div>
-  <div id="error"></div>
-  <table>
-    <thead><tr><th>Environment</th><th>Requirements hash</th><th></th></tr></thead>
-    <tbody id="venv-list"></tbody>
-  </table>
+  <div class="tabs">
+    <div class="tab active" data-tab="scripts">Scripts</div>
+    <div class="tab" data-tab="venvs">Environments</div>
+  </div>
+
+  <div class="panel active" id="tab-scripts">
+    <div class="scripts-layout">
+      <div class="script-list">
+        <button class="new-btn" id="new-btn">+ New script</button>
+        <div class="script-list-items" id="script-list-items"></div>
+      </div>
+      <div class="editor-area">
+        <div class="editor-toolbar">
+          <input id="script-name-input" placeholder="script-name" autocomplete="off" spellcheck="false">
+          <button id="save-btn">Save</button>
+          <button id="run-btn">&#9654; Run</button>
+          <span id="editor-status"></span>
+        </div>
+        <div id="monaco-container"></div>
+        <div class="output-panel" id="output-panel">
+          <div style="color:#555;font-size:11px">Output appears here after Run</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="tab-venvs">
+    <div class="venvs-panel">
+      <h2>Virtual Environments</h2>
+      <div id="venv-status">Loading...</div>
+      <div id="venv-error"></div>
+      <table>
+        <thead><tr><th>Environment</th><th>Requirements hash</th><th></th></tr></thead>
+        <tbody id="venv-list"></tbody>
+      </table>
+    </div>
+  </div>
 
   <script>
-    function setStatus(msg) { document.getElementById('status').textContent = msg; }
-    function setError(msg) { document.getElementById('error').textContent = msg; }
+    var editor = null;
+    var currentScript = null;
+    var Homey = null;
 
-    function buildRow(v) {
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        var name = tab.dataset.tab;
+        document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.tab === name); });
+        document.querySelectorAll('.panel').forEach(function(p) { p.classList.toggle('active', p.id === 'tab-' + name); });
+        if (name === 'venvs') loadVenvs();
+        if (editor) editor.layout();
+      });
+    });
+
+    function setEditorStatus(msg) { document.getElementById('editor-status').textContent = msg; }
+
+    function appendOutput(text, cls) {
+      var panel = document.getElementById('output-panel');
+      var line = document.createElement('div');
+      line.className = 'output-line' + (cls ? ' ' + cls : '');
+      line.textContent = text;
+      panel.appendChild(line);
+      panel.scrollTop = panel.scrollHeight;
+    }
+
+    function clearOutput() { document.getElementById('output-panel').innerHTML = ''; }
+
+    // Script list
+    function loadScriptList() {
+      Homey.api('GET', '/scripts').then(function(scripts) {
+        var container = document.getElementById('script-list-items');
+        container.innerHTML = '';
+        (scripts || []).forEach(function(s) {
+          var item = document.createElement('div');
+          item.className = 'script-item' + (currentScript === s.name ? ' active' : '');
+          item.dataset.name = s.name;
+
+          var nameSpan = document.createElement('span');
+          nameSpan.className = 'script-item-name';
+          nameSpan.title = s.name;
+          nameSpan.textContent = s.name;
+          nameSpan.addEventListener('click', function() { openScript(s.name); });
+
+          var delBtn = document.createElement('button');
+          delBtn.className = 'del-btn';
+          delBtn.textContent = 'x';
+          delBtn.addEventListener('click', function(ev) { confirmDelete(s.name, delBtn); ev.stopPropagation(); });
+
+          item.appendChild(nameSpan);
+          item.appendChild(delBtn);
+          container.appendChild(item);
+        });
+      }).catch(function(e) { setEditorStatus('Load failed: ' + (e.message || e)); });
+    }
+
+    function openScript(name) {
+      Homey.api('POST', '/script-get', {name: name}).then(function(result) {
+        currentScript = name;
+        document.getElementById('script-name-input').value = name;
+        if (editor) editor.setValue(result.code || '');
+        clearOutput();
+        setEditorStatus('');
+        loadScriptList();
+      }).catch(function(e) { setEditorStatus('Open failed: ' + (e.message || e)); });
+    }
+
+    function newScript() {
+      currentScript = null;
+      document.getElementById('script-name-input').value = '';
+      if (editor) editor.setValue('# New script\nreturn 42');
+      clearOutput();
+      setEditorStatus('');
+      loadScriptList();
+    }
+
+    function saveCurrentScript() {
+      var name = document.getElementById('script-name-input').value.trim();
+      var code = editor ? editor.getValue() : '';
+      if (!name) { setEditorStatus('Enter a name'); return; }
+      Homey.api('POST', '/script-save', {name: name, code: code}).then(function() {
+        currentScript = name;
+        setEditorStatus('Saved');
+        loadScriptList();
+      }).catch(function(e) { setEditorStatus('Save failed: ' + (e.message || e)); });
+    }
+
+    var _delConfirm = {};
+    function confirmDelete(name, btn) {
+      if (_delConfirm[name]) {
+        delete _delConfirm[name];
+        btn.textContent = 'x';
+        Homey.api('POST', '/script-delete', {name: name}).then(function() {
+          if (currentScript === name) newScript();
+          loadScriptList();
+        }).catch(function(e) { setEditorStatus('Delete failed: ' + (e.message || e)); });
+      } else {
+        _delConfirm[name] = setTimeout(function() { delete _delConfirm[name]; btn.textContent = 'x'; }, 3000);
+        btn.textContent = '?';
+      }
+    }
+
+    function runCurrentScript() {
+      var name = document.getElementById('script-name-input').value.trim();
+      var code = editor ? editor.getValue() : '';
+      if (!name) { setEditorStatus('Save script first'); return; }
+      clearOutput();
+      setEditorStatus('Saving...');
+      Homey.api('POST', '/script-save', {name: name, code: code}).then(function() {
+        currentScript = name;
+        setEditorStatus('Running...');
+        return Homey.api('POST', '/script-run', {name: name});
+      }).then(function(result) {
+        if (result && result.error) {
+          appendOutput('Error: ' + result.error, 'output-error');
+          setEditorStatus('Failed');
+        } else {
+          appendOutput('return_value: ' + ((result && result.return_value != null) ? result.return_value : '(empty)'), 'output-ok');
+          setEditorStatus('Done');
+        }
+        loadScriptList();
+      }).catch(function(e) {
+        appendOutput('Error: ' + (e.message || e), 'output-error');
+        setEditorStatus('Failed');
+      });
+    }
+
+    // Button wiring
+    document.getElementById('new-btn').addEventListener('click', newScript);
+    document.getElementById('save-btn').addEventListener('click', saveCurrentScript);
+    document.getElementById('run-btn').addEventListener('click', runCurrentScript);
+
+    // Venvs tab (preserved from existing page)
+    function buildVenvRow(v) {
       var tr = document.createElement('tr');
-
-      var tdUid = document.createElement('td');
-      tdUid.textContent = v.name;
-
-      var tdHash = document.createElement('td');
-      tdHash.textContent = v.hash ? v.hash.slice(0, 12) + '...' : '-';
-
-      var tdAction = document.createElement('td');
-      var btn = document.createElement('button');
-      btn.className = 'del';
-      btn.textContent = 'Delete';
+      var tdName = document.createElement('td'); tdName.textContent = v.name;
+      var tdHash = document.createElement('td'); tdHash.textContent = v.hash ? v.hash.slice(0,12)+'...' : '-';
+      var tdBtn = document.createElement('td');
+      var btn = document.createElement('button'); btn.className = 'del'; btn.textContent = 'Delete';
       btn.addEventListener('click', function() { delVenv(v.name, btn); });
-      tdAction.appendChild(btn);
-
-      tr.appendChild(tdUid);
-      tr.appendChild(tdHash);
-      tr.appendChild(tdAction);
+      tdBtn.appendChild(btn); tr.appendChild(tdName); tr.appendChild(tdHash); tr.appendChild(tdBtn);
       return tr;
     }
 
-    async function load() {
-      setError('');
-      try {
-        var venvs = await Homey.api('GET', '/venvs');
+    function loadVenvs() {
+      document.getElementById('venv-error').textContent = '';
+      Homey.api('GET', '/venvs').then(function(venvs) {
         var tbody = document.getElementById('venv-list');
-        while (tbody.firstChild) { tbody.removeChild(tbody.firstChild); }
-        if (!venvs || !Array.isArray(venvs) || !venvs.length) {
-          setStatus('No virtual environments.');
-          return;
-        }
-        setStatus(venvs.length + ' environment(s)');
-        for (var i = 0; i < venvs.length; i++) {
-          tbody.appendChild(buildRow(venvs[i]));
-        }
-      } catch (e) {
-        setStatus('');
-        setError('Failed to load: ' + e.message);
-      }
+        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+        if (!venvs || !venvs.length) { document.getElementById('venv-status').textContent = 'No environments.'; return; }
+        document.getElementById('venv-status').textContent = venvs.length + ' environment(s)';
+        venvs.forEach(function(v) { tbody.appendChild(buildVenvRow(v)); });
+      }).catch(function(e) {
+        document.getElementById('venv-status').textContent = '';
+        document.getElementById('venv-error').textContent = 'Failed: ' + (e.message || e);
+      });
     }
 
-    async function delVenv(uid, btn) {
-      if (btn.dataset.confirm !== '1') {
-        btn.dataset.confirm = '1';
+    var _venvDelConfirm = {};
+    function delVenv(uid, btn) {
+      if (_venvDelConfirm[uid]) {
+        delete _venvDelConfirm[uid];
+        btn.textContent = 'Delete';
+        btn.disabled = true;
+        Homey.api('POST', '/venv-delete', {uid: uid}).then(loadVenvs).catch(function(e) {
+          document.getElementById('venv-error').textContent = 'Delete failed: ' + (e.message || e);
+          btn.disabled = false;
+        });
+      } else {
+        _venvDelConfirm[uid] = setTimeout(function() { delete _venvDelConfirm[uid]; btn.textContent = 'Delete'; }, 3000);
         btn.textContent = 'Confirm?';
-        setTimeout(function() { btn.dataset.confirm = '0'; btn.textContent = 'Delete'; }, 3000);
-        return;
-      }
-      btn.disabled = true;
-      try {
-        await Homey.api('POST', '/venv-delete', {uid: uid});
-        load();
-      } catch (e) {
-        setError('Delete failed: ' + e.message);
-        btn.disabled = false;
       }
     }
 
-    function onHomeyReady(Homey) {
+    // Monaco init
+    function initMonaco() {
+      require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' } });
+      require(['vs/editor/editor.main'], function() {
+        editor = monaco.editor.create(document.getElementById('monaco-container'), {
+          value: '# Write your Python script here\nreturn 42',
+          language: 'python',
+          theme: 'vs',
+          minimap: { enabled: false },
+          fontSize: 13,
+          lineNumbers: 'on',
+          scrollBeyondLastLine: false,
+          automaticLayout: true,
+          wordWrap: 'on',
+        });
+        loadScriptList();
+      });
+    }
+
+    function onHomeyReady(H) {
+      Homey = H;
       Homey.ready();
-      load();
+      var loaderScript = document.createElement('script');
+      loaderScript.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js';
+      loaderScript.onload = initMonaco;
+      document.head.appendChild(loaderScript);
     }
   </script>
 </body>
