@@ -76,8 +76,8 @@
           "nl": "Bewaard script uitvoeren"
         },
         "titleFormatted": {
-          "en": "Run script [[script_name]]",
-          "nl": "Voer script [[script_name]] uit"
+          "en": "Run [[script_name]] with [[argument]]",
+          "nl": "Voer [[script_name]] uit met [[argument]]"
         },
         "highlight": true,
         "args": [
@@ -124,8 +124,8 @@
           "nl": "Script uitvoeren"
         },
         "titleFormatted": {
-          "en": "Run script (sandboxed)",
-          "nl": "Voer script uit (sandbox)"
+          "en": "Run [[script]] with [[argument]] (timeout: [[timeout]]s)",
+          "nl": "Voer [[script]] uit met [[argument]] (timeout: [[timeout]]s)"
         },
         "highlight": true,
         "args": [
@@ -186,8 +186,8 @@
           "nl": "Script uitvoeren met packages"
         },
         "titleFormatted": {
-          "en": "Run script with packages in [[venv_name]]",
-          "nl": "Voer script uit met packages in [[venv_name]]"
+          "en": "Run [[script]] with [[requirements]] in [[venv_name]] [[argument]] (timeout: [[timeout]]s)",
+          "nl": "Voer [[script]] uit met [[requirements]] in [[venv_name]] [[argument]] (timeout: [[timeout]]s)"
         },
         "highlight": true,
         "args": [

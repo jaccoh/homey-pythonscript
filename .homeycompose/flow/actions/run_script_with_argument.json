@@ -1,6 +1,6 @@
 {
   "title": { "en": "Run Script with Packages", "nl": "Script uitvoeren met packages" },
-  "titleFormatted": { "en": "Run script with packages in [[venv_name]]", "nl": "Voer script uit met packages in [[venv_name]]" },
+  "titleFormatted": { "en": "Run [[script]] with [[requirements]] in [[venv_name]] [[argument]] (timeout: [[timeout]]s)", "nl": "Voer [[script]] uit met [[requirements]] in [[venv_name]] [[argument]] (timeout: [[timeout]]s)" },
   "highlight": true,
   "args": [
     {

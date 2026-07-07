@@ -1,6 +1,6 @@
 {
   "title": { "en": "Run Named Script", "nl": "Bewaard script uitvoeren" },
-  "titleFormatted": { "en": "Run script [[script_name]]", "nl": "Voer script [[script_name]] uit" },
+  "titleFormatted": { "en": "Run [[script_name]] with [[argument]]", "nl": "Voer [[script_name]] uit met [[argument]]" },
   "highlight": true,
   "args": [
     {
