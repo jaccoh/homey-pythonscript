@@ -83,6 +83,11 @@ class VenvManager:
                 await run(None, lambda: subprocess.run(
                     [str(pip), "install", "-r", req_file], check=True, capture_output=True
                 ))
+            except subprocess.CalledProcessError as e:
+                stderr = (e.stderr or b"").decode(errors="replace").strip()
+                stdout = (e.stdout or b"").decode(errors="replace").strip()
+                detail = stderr or stdout or f"exit code {e.returncode}"
+                raise RuntimeError(f"pip install failed:\n{detail}") from None
             finally:
                 Path(req_file).unlink(missing_ok=True)
             self._write_hash(card_uid, requirements)
