@@ -20,6 +20,17 @@ async def venvs(homey, **kwargs):
     return vm.list_venvs()
 
 
+async def build_venv(homey, **kwargs):
+    body = kwargs.get('body') or {}
+    name = str(body.get('name') or kwargs.get('name') or '')
+    requirements = str(body.get('requirements') or kwargs.get('requirements') or '')
+    if not name or not _NAME_RE.fullmatch(name):
+        raise ValueError(f"Invalid venv name: {name!r}")
+    vm = VenvManager(venv_root=_VENV_ROOT)
+    await vm.build(name, requirements)
+    return None
+
+
 async def delete_venv(homey, **kwargs):
     # Homey SDK nests POST body under 'body' key; try direct kwarg first
     uid = str(kwargs.get('uid') or (kwargs.get('body') or {}).get('uid') or '')

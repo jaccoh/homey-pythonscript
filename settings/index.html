@@ -10,46 +10,45 @@
 
     /* Tabs */
     .tabs { display: flex; border-bottom: 1px solid #ddd; background: #f8f8f8; flex-shrink: 0; }
-    .tab { padding: 10px 20px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; user-select: none; }
+    .tab { padding: 9px 16px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; user-select: none; }
     .tab.active { border-bottom-color: #3572A5; color: #3572A5; font-weight: 600; }
 
     /* Panels */
-    .panel { display: none; flex: 1; overflow: hidden; }
-    .panel.active { display: flex; flex-direction: column; }
+    .panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .panel.active { display: flex; }
 
-    /* Scripts tab layout */
-    .scripts-layout { display: flex; flex: 1; overflow: hidden; }
-    .script-list { width: 130px; border-right: 1px solid #ddd; overflow-y: auto; display: flex; flex-direction: column; }
-    .script-list-items { flex: 1; overflow-y: auto; }
-    .script-item { padding: 8px 10px; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 4px; }
-    .script-item:hover { background: #f0f0f0; }
-    .script-item.active { background: #e8f0fe; color: #1a56c4; }
-    .script-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-    .del-btn { color: #c00; background: none; border: none; cursor: pointer; font-size: 11px; padding: 2px 4px; flex-shrink: 0; visibility: hidden; }
-    .script-item:hover .del-btn { visibility: visible; }
-    .new-btn { margin: 8px; padding: 6px 8px; font-size: 12px; cursor: pointer; }
+    /* Scripts tab */
+    .script-toolbar { display: flex; gap: 5px; align-items: center; padding: 6px 8px; border-bottom: 1px solid #ddd; background: #fafafa; flex-shrink: 0; flex-wrap: wrap; }
+    .script-toolbar select { flex: 1; min-width: 0; font-size: 12px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; }
+    .script-toolbar input { font-size: 12px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; }
+    .script-toolbar button { font-size: 12px; padding: 4px 8px; cursor: pointer; white-space: nowrap; }
+    #name-input { width: 90px; }
+    #args-input { width: 60px; }
+    #editor-status { font-size: 11px; color: #888; width: 100%; padding: 0 2px; }
 
-    /* Editor area */
-    .editor-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .editor-toolbar { padding: 6px 10px; border-bottom: 1px solid #ddd; display: flex; gap: 6px; align-items: center; flex-shrink: 0; background: #fafafa; }
-    .editor-toolbar input { font-size: 13px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 3px; width: 100px; }
-    .editor-toolbar button { padding: 4px 10px; font-size: 12px; cursor: pointer; }
-    #editor-status { font-size: 11px; color: #888; margin-left: auto; }
-    #monaco-container { flex: 1; overflow: hidden; }
-    .output-panel { height: 130px; border-top: 1px solid #ddd; background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 12px; overflow-y: auto; padding: 6px 10px; flex-shrink: 0; }
+    #monaco-container { flex: 1; overflow: hidden; min-height: 0; }
+    .output-panel { height: 110px; border-top: 1px solid #ddd; background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 12px; overflow-y: auto; padding: 5px 8px; flex-shrink: 0; }
     .output-line { margin: 1px 0; white-space: pre-wrap; word-break: break-all; }
     .output-error { color: #f88; }
     .output-ok { color: #8f8; }
 
     /* Venvs tab */
-    .venvs-panel { padding: 16px; overflow-y: auto; flex: 1; }
-    h2 { font-size: 15px; margin-bottom: 8px; }
+    .venvs-panel { padding: 10px 12px; overflow-y: auto; flex: 1; }
+    .venv-form { background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 12px; }
+    .venv-form h3 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #444; }
+    .venv-form-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .venv-form label { font-size: 12px; color: #666; width: 80px; flex-shrink: 0; }
+    .venv-form input { flex: 1; font-size: 12px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; }
+    .venv-form textarea { flex: 1; font-size: 12px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; font-family: monospace; resize: vertical; height: 60px; }
+    .venv-form button { font-size: 12px; padding: 5px 12px; cursor: pointer; }
+    #venv-build-status { font-size: 11px; color: #888; margin-top: 4px; }
+    h2 { font-size: 14px; margin-bottom: 6px; color: #444; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 8px 4px; border-bottom: 1px solid #eee; font-size: 13px; }
+    th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid #eee; font-size: 12px; }
     th { font-weight: 600; color: #666; }
-    button.del { background: none; border: none; color: #c00; cursor: pointer; font-size: 13px; }
-    #venv-status { font-size: 12px; color: #888; margin-top: 4px; }
-    #venv-error { font-size: 12px; color: #c00; margin-top: 4px; }
+    button.del { background: none; border: none; color: #c00; cursor: pointer; font-size: 12px; }
+    #venv-list-status { font-size: 12px; color: #888; margin-bottom: 4px; }
+    #venv-list-error { font-size: 12px; color: #c00; margin-bottom: 4px; }
   </style>
 </head>
 <body>
@@ -58,35 +57,49 @@
     <div class="tab" data-tab="venvs">Environments</div>
   </div>
 
+  <!-- Scripts tab -->
   <div class="panel active" id="tab-scripts">
-    <div class="scripts-layout">
-      <div class="script-list">
-        <button class="new-btn" id="new-btn">+ New script</button>
-        <div class="script-list-items" id="script-list-items"></div>
-      </div>
-      <div class="editor-area">
-        <div class="editor-toolbar">
-          <input id="script-name-input" placeholder="script-name" autocomplete="off" spellcheck="false">
-          <button id="save-btn">Save</button>
-          <input id="args-input" placeholder="args" autocomplete="off" spellcheck="false" style="width:70px">
-          <button id="run-btn">&#9654; Run</button>
-          <span id="editor-status"></span>
-        </div>
-        <div id="monaco-container"></div>
-        <div class="output-panel" id="output-panel">
-          <div style="color:#555;font-size:11px">Output appears here after Run</div>
-        </div>
-      </div>
+    <div class="script-toolbar">
+      <select id="script-select"><option value="">-- select script --</option></select>
+      <button id="new-btn">+ New</button>
+      <button id="del-script-btn" style="color:#c00;display:none">Delete</button>
+    </div>
+    <div class="script-toolbar" style="border-top:none">
+      <input id="name-input" placeholder="name" autocomplete="off" spellcheck="false">
+      <input id="args-input" placeholder="args" autocomplete="off" spellcheck="false">
+      <button id="save-btn">Save</button>
+      <button id="run-btn">&#9654; Run</button>
+      <span id="editor-status"></span>
+    </div>
+    <div id="monaco-container"></div>
+    <div class="output-panel" id="output-panel">
+      <div style="color:#555;font-size:11px">Output appears here after Run</div>
     </div>
   </div>
 
+  <!-- Venvs tab -->
   <div class="panel" id="tab-venvs">
     <div class="venvs-panel">
-      <h2>Virtual Environments</h2>
-      <div id="venv-status">Loading...</div>
-      <div id="venv-error"></div>
+      <div class="venv-form">
+        <h3>New / rebuild environment</h3>
+        <div class="venv-form-row">
+          <label>Name</label>
+          <input id="venv-name-input" placeholder="my-env" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="venv-form-row">
+          <label>Requirements</label>
+          <textarea id="venv-req-input" placeholder="requests==2.31.0&#10;numpy>=1.26"></textarea>
+        </div>
+        <div class="venv-form-row" style="justify-content:flex-end">
+          <button id="venv-build-btn">Build</button>
+        </div>
+        <div id="venv-build-status"></div>
+      </div>
+      <h2>Existing environments</h2>
+      <div id="venv-list-status">Loading...</div>
+      <div id="venv-list-error"></div>
       <table>
-        <thead><tr><th>Environment</th><th>Requirements hash</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Req. hash</th><th></th></tr></thead>
         <tbody id="venv-list"></tbody>
       </table>
     </div>
@@ -103,13 +116,12 @@
         var name = tab.dataset.tab;
         document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.tab === name); });
         document.querySelectorAll('.panel').forEach(function(p) { p.classList.toggle('active', p.id === 'tab-' + name); });
-        if (name === 'venvs') loadVenvs();
+        if (name === 'venvs') loadVenvList();
         if (editor) editor.layout();
       });
     });
 
-    function setEditorStatus(msg) { document.getElementById('editor-status').textContent = msg; }
-
+    function setStatus(msg) { document.getElementById('editor-status').textContent = msg; }
     function appendOutput(text, cls) {
       var panel = document.getElementById('output-panel');
       var line = document.createElement('div');
@@ -118,156 +130,168 @@
       panel.appendChild(line);
       panel.scrollTop = panel.scrollHeight;
     }
-
     function clearOutput() { document.getElementById('output-panel').innerHTML = ''; }
 
-    // Script list
-    function loadScriptList() {
+    // Script dropdown
+    function loadScriptList(selectName) {
       _H.api('GET', '/scripts').then(function(scripts) {
-        var container = document.getElementById('script-list-items');
-        container.innerHTML = '';
+        var sel = document.getElementById('script-select');
+        var prev = selectName || sel.value;
+        sel.innerHTML = '<option value="">-- select script --</option>';
         (scripts || []).forEach(function(s) {
-          var item = document.createElement('div');
-          item.className = 'script-item' + (currentScript === s.name ? ' active' : '');
-          item.dataset.name = s.name;
-
-          var nameSpan = document.createElement('span');
-          nameSpan.className = 'script-item-name';
-          nameSpan.title = s.name;
-          nameSpan.textContent = s.name;
-          nameSpan.addEventListener('click', function() { openScript(s.name); });
-
-          var delBtn = document.createElement('button');
-          delBtn.className = 'del-btn';
-          delBtn.textContent = 'x';
-          delBtn.addEventListener('click', function(ev) { confirmDelete(s.name, delBtn); ev.stopPropagation(); });
-
-          item.appendChild(nameSpan);
-          item.appendChild(delBtn);
-          container.appendChild(item);
+          var opt = document.createElement('option');
+          opt.value = s.name;
+          opt.textContent = s.name;
+          if (s.name === prev) opt.selected = true;
+          sel.appendChild(opt);
         });
-      }).catch(function(e) { setEditorStatus('Load failed: ' + (e.message || e)); });
+        updateDelBtn();
+      }).catch(function(e) { setStatus('List failed: ' + (e.message || e)); });
     }
 
-    function openScript(name) {
+    function updateDelBtn() {
+      var sel = document.getElementById('script-select');
+      document.getElementById('del-script-btn').style.display = sel.value ? '' : 'none';
+    }
+
+    document.getElementById('script-select').addEventListener('change', function() {
+      var name = this.value;
+      updateDelBtn();
+      if (!name) return;
       _H.api('POST', '/script-get', {name: name}).then(function(result) {
         currentScript = name;
-        document.getElementById('script-name-input').value = name;
+        document.getElementById('name-input').value = name;
         if (editor) editor.setValue(result.code || '');
         clearOutput();
-        setEditorStatus('');
-        loadScriptList();
-      }).catch(function(e) { setEditorStatus('Open failed: ' + (e.message || e)); });
-    }
+        setStatus('');
+      }).catch(function(e) { setStatus('Open failed: ' + (e.message || e)); });
+    });
 
-    function newScript() {
+    document.getElementById('new-btn').addEventListener('click', function() {
       currentScript = null;
-      document.getElementById('script-name-input').value = '';
+      document.getElementById('script-select').value = '';
+      document.getElementById('name-input').value = '';
       if (editor) editor.setValue('# New script\nreturn 42');
       clearOutput();
-      setEditorStatus('');
-      loadScriptList();
-    }
+      setStatus('');
+      updateDelBtn();
+    });
 
-    function saveCurrentScript() {
-      var name = document.getElementById('script-name-input').value.trim();
-      var code = editor ? editor.getValue() : '';
-      if (!name) { setEditorStatus('Enter a name'); return; }
-      _H.api('POST', '/script-save', {name: name, code: code}).then(function() {
-        currentScript = name;
-        setEditorStatus('Saved');
-        loadScriptList();
-      }).catch(function(e) { setEditorStatus('Save failed: ' + (e.message || e)); });
-    }
-
-    var _delConfirm = {};
-    function confirmDelete(name, btn) {
-      if (_delConfirm[name]) {
-        clearTimeout(_delConfirm[name]);
-        delete _delConfirm[name];
-        btn.textContent = 'x';
+    var _delScriptConfirm = null;
+    document.getElementById('del-script-btn').addEventListener('click', function() {
+      var btn = this;
+      var name = document.getElementById('script-select').value;
+      if (!name) return;
+      if (_delScriptConfirm) {
+        clearTimeout(_delScriptConfirm);
+        _delScriptConfirm = null;
+        btn.textContent = 'Delete';
         _H.api('POST', '/script-delete', {name: name}).then(function() {
-          if (currentScript === name) newScript();
-          loadScriptList();
-        }).catch(function(e) { setEditorStatus('Delete failed: ' + (e.message || e)); });
+          currentScript = null;
+          document.getElementById('script-select').value = '';
+          document.getElementById('name-input').value = '';
+          if (editor) editor.setValue('');
+          clearOutput();
+          setStatus('Deleted');
+          loadScriptList('');
+        }).catch(function(e) { setStatus('Delete failed: ' + (e.message || e)); });
       } else {
-        _delConfirm[name] = setTimeout(function() { delete _delConfirm[name]; btn.textContent = 'x'; }, 3000);
         btn.textContent = '?';
+        _delScriptConfirm = setTimeout(function() { _delScriptConfirm = null; btn.textContent = 'Delete'; }, 3000);
       }
-    }
+    });
 
-    function runCurrentScript() {
-      var name = document.getElementById('script-name-input').value.trim();
+    document.getElementById('save-btn').addEventListener('click', function() {
+      var name = document.getElementById('name-input').value.trim();
       var code = editor ? editor.getValue() : '';
-      if (!name) { setEditorStatus('Save script first'); return; }
-      clearOutput();
-      setEditorStatus('Saving...');
+      if (!name) { setStatus('Enter a name'); return; }
       _H.api('POST', '/script-save', {name: name, code: code}).then(function() {
         currentScript = name;
-        setEditorStatus('Running...');
-        var args = document.getElementById('args-input').value.trim() || null;
+        setStatus('Saved');
+        loadScriptList(name);
+      }).catch(function(e) { setStatus('Save failed: ' + (e.message || e)); });
+    });
+
+    document.getElementById('run-btn').addEventListener('click', function() {
+      var name = document.getElementById('name-input').value.trim();
+      var code = editor ? editor.getValue() : '';
+      var args = document.getElementById('args-input').value.trim() || null;
+      if (!name) { setStatus('Enter a name'); return; }
+      clearOutput();
+      setStatus('Saving...');
+      _H.api('POST', '/script-save', {name: name, code: code}).then(function() {
+        currentScript = name;
+        setStatus('Running...');
         return _H.api('POST', '/script-run', {name: name, args: args});
       }).then(function(result) {
         if (result && result.error) {
           appendOutput('Error: ' + result.error, 'output-error');
-          setEditorStatus('Failed');
+          setStatus('Failed');
         } else {
           appendOutput('return_value: ' + ((result && result.return_value != null) ? result.return_value : '(empty)'), 'output-ok');
-          setEditorStatus('Done');
+          setStatus('Done');
         }
-        loadScriptList();
+        loadScriptList(name);
       }).catch(function(e) {
         appendOutput('Error: ' + (e.message || e), 'output-error');
-        setEditorStatus('Failed');
+        setStatus('Failed');
       });
+    });
+
+    // Venvs tab
+    function setBuildStatus(msg, isErr) {
+      var el = document.getElementById('venv-build-status');
+      el.textContent = msg;
+      el.style.color = isErr ? '#c00' : '#888';
     }
 
-    // Button wiring
-    document.getElementById('new-btn').addEventListener('click', newScript);
-    document.getElementById('save-btn').addEventListener('click', saveCurrentScript);
-    document.getElementById('run-btn').addEventListener('click', runCurrentScript);
+    document.getElementById('venv-build-btn').addEventListener('click', function() {
+      var name = document.getElementById('venv-name-input').value.trim();
+      var req = document.getElementById('venv-req-input').value.trim();
+      if (!name) { setBuildStatus('Enter a name', true); return; }
+      setBuildStatus('Building... (this may take a minute)');
+      _H.api('POST', '/venv-build', {name: name, requirements: req}).then(function() {
+        setBuildStatus('Built: ' + name);
+        loadVenvList();
+      }).catch(function(e) { setBuildStatus('Build failed: ' + (e.message || e), true); });
+    });
 
-    // Venvs tab (preserved from existing page)
     function buildVenvRow(v) {
       var tr = document.createElement('tr');
       var tdName = document.createElement('td'); tdName.textContent = v.name;
-      var tdHash = document.createElement('td'); tdHash.textContent = v.hash ? v.hash.slice(0,12)+'...' : '-';
+      var tdHash = document.createElement('td'); tdHash.textContent = v.hash ? v.hash.slice(0,10)+'...' : '-';
       var tdBtn = document.createElement('td');
       var btn = document.createElement('button'); btn.className = 'del'; btn.textContent = 'Delete';
-      btn.addEventListener('click', function() { delVenv(v.name, btn); });
+      var _confirm = null;
+      btn.addEventListener('click', function() {
+        if (_confirm) {
+          clearTimeout(_confirm); _confirm = null; btn.textContent = 'Delete';
+          btn.disabled = true;
+          _H.api('POST', '/venv-delete', {uid: v.name}).then(loadVenvList).catch(function(e) {
+            document.getElementById('venv-list-error').textContent = 'Delete failed: ' + (e.message || e);
+            btn.disabled = false;
+          });
+        } else {
+          btn.textContent = '?';
+          _confirm = setTimeout(function() { _confirm = null; btn.textContent = 'Delete'; }, 3000);
+        }
+      });
       tdBtn.appendChild(btn); tr.appendChild(tdName); tr.appendChild(tdHash); tr.appendChild(tdBtn);
       return tr;
     }
 
-    function loadVenvs() {
-      document.getElementById('venv-error').textContent = '';
+    function loadVenvList() {
+      document.getElementById('venv-list-error').textContent = '';
       _H.api('GET', '/venvs').then(function(venvs) {
         var tbody = document.getElementById('venv-list');
         while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-        if (!venvs || !venvs.length) { document.getElementById('venv-status').textContent = 'No environments.'; return; }
-        document.getElementById('venv-status').textContent = venvs.length + ' environment(s)';
+        if (!venvs || !venvs.length) { document.getElementById('venv-list-status').textContent = 'No environments.'; return; }
+        document.getElementById('venv-list-status').textContent = venvs.length + ' environment(s)';
         venvs.forEach(function(v) { tbody.appendChild(buildVenvRow(v)); });
       }).catch(function(e) {
-        document.getElementById('venv-status').textContent = '';
-        document.getElementById('venv-error').textContent = 'Failed: ' + (e.message || e);
+        document.getElementById('venv-list-status').textContent = '';
+        document.getElementById('venv-list-error').textContent = 'Failed: ' + (e.message || e);
       });
-    }
-
-    var _venvDelConfirm = {};
-    function delVenv(uid, btn) {
-      if (_venvDelConfirm[uid]) {
-        clearTimeout(_venvDelConfirm[uid]);
-        delete _venvDelConfirm[uid];
-        btn.textContent = 'Delete';
-        btn.disabled = true;
-        _H.api('POST', '/venv-delete', {uid: uid}).then(loadVenvs).catch(function(e) {
-          document.getElementById('venv-error').textContent = 'Delete failed: ' + (e.message || e);
-          btn.disabled = false;
-        });
-      } else {
-        _venvDelConfirm[uid] = setTimeout(function() { delete _venvDelConfirm[uid]; btn.textContent = 'Delete'; }, 3000);
-        btn.textContent = 'Confirm?';
-      }
     }
 
     // Monaco init
@@ -285,17 +309,17 @@
           automaticLayout: true,
           wordWrap: 'on',
         });
-        loadScriptList();
+        loadScriptList('');
       });
     }
 
     function onHomeyReady(H) {
       _H = H;
       _H.ready();
-      var loaderScript = document.createElement('script');
-      loaderScript.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js';
-      loaderScript.onload = initMonaco;
-      document.head.appendChild(loaderScript);
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js';
+      s.onload = initMonaco;
+      document.head.appendChild(s);
     }
   </script>
 </body>

@@ -39,6 +39,10 @@
       "method": "GET",
       "path": "/venvs"
     },
+    "build_venv": {
+      "method": "POST",
+      "path": "/venv-build"
+    },
     "delete_venv": {
       "method": "POST",
       "path": "/venv-delete"
@@ -66,6 +70,110 @@
   },
   "flow": {
     "actions": [
+      {
+        "title": {
+          "en": "Run Named Script",
+          "nl": "Bewaard script uitvoeren"
+        },
+        "highlight": true,
+        "args": [
+          {
+            "name": "script_name",
+            "type": "autocomplete",
+            "title": {
+              "en": "Script",
+              "nl": "Script"
+            },
+            "placeholder": {
+              "en": "Select a saved script"
+            }
+          },
+          {
+            "name": "timeout",
+            "type": "number",
+            "title": {
+              "en": "Timeout (seconds)",
+              "nl": "Time-out (seconden)"
+            },
+            "placeholder": {
+              "en": "30"
+            },
+            "min": 1,
+            "max": 300,
+            "required": false
+          }
+        ],
+        "tokens": [
+          {
+            "name": "return_value",
+            "type": "string",
+            "title": {
+              "en": "Return value",
+              "nl": "Returnwaarde"
+            },
+            "example": "42"
+          }
+        ],
+        "id": "run_named_script"
+      },
+      {
+        "title": {
+          "en": "Run Named Script with Argument",
+          "nl": "Bewaard script uitvoeren met argument"
+        },
+        "highlight": true,
+        "args": [
+          {
+            "name": "script_name",
+            "type": "autocomplete",
+            "title": {
+              "en": "Script",
+              "nl": "Script"
+            },
+            "placeholder": {
+              "en": "Select a saved script"
+            }
+          },
+          {
+            "name": "argument",
+            "type": "text",
+            "title": {
+              "en": "Argument (optional)",
+              "nl": "Argument (optioneel)"
+            },
+            "placeholder": {
+              "en": "Value passed as `args`"
+            },
+            "required": false
+          },
+          {
+            "name": "timeout",
+            "type": "number",
+            "title": {
+              "en": "Timeout (seconds)",
+              "nl": "Time-out (seconden)"
+            },
+            "placeholder": {
+              "en": "30"
+            },
+            "min": 1,
+            "max": 300,
+            "required": false
+          }
+        ],
+        "tokens": [
+          {
+            "name": "return_value",
+            "type": "string",
+            "title": {
+              "en": "Return value",
+              "nl": "Returnwaarde"
+            },
+            "example": "42"
+          }
+        ],
+        "id": "run_named_script_with_argument"
+      },
       {
         "title": {
           "en": "Run Script",
@@ -203,110 +311,6 @@
           }
         ],
         "id": "run_script_with_argument"
-      },
-      {
-        "title": {
-          "en": "Run Named Script",
-          "nl": "Bewaard script uitvoeren"
-        },
-        "highlight": true,
-        "args": [
-          {
-            "name": "script_name",
-            "type": "autocomplete",
-            "title": {
-              "en": "Script",
-              "nl": "Script"
-            },
-            "placeholder": {
-              "en": "Select a saved script"
-            }
-          },
-          {
-            "name": "timeout",
-            "type": "number",
-            "title": {
-              "en": "Timeout (seconds)",
-              "nl": "Time-out (seconden)"
-            },
-            "placeholder": {
-              "en": "30"
-            },
-            "min": 1,
-            "max": 300,
-            "required": false
-          }
-        ],
-        "tokens": [
-          {
-            "name": "return_value",
-            "type": "string",
-            "title": {
-              "en": "Return value",
-              "nl": "Returnwaarde"
-            },
-            "example": "42"
-          }
-        ],
-        "id": "run_named_script"
-      },
-      {
-        "title": {
-          "en": "Run Named Script with Argument",
-          "nl": "Bewaard script uitvoeren met argument"
-        },
-        "highlight": true,
-        "args": [
-          {
-            "name": "script_name",
-            "type": "autocomplete",
-            "title": {
-              "en": "Script",
-              "nl": "Script"
-            },
-            "placeholder": {
-              "en": "Select a saved script"
-            }
-          },
-          {
-            "name": "argument",
-            "type": "text",
-            "title": {
-              "en": "Argument (optional)",
-              "nl": "Argument (optioneel)"
-            },
-            "placeholder": {
-              "en": "Value passed as `args`"
-            },
-            "required": false
-          },
-          {
-            "name": "timeout",
-            "type": "number",
-            "title": {
-              "en": "Timeout (seconds)",
-              "nl": "Time-out (seconden)"
-            },
-            "placeholder": {
-              "en": "30"
-            },
-            "min": 1,
-            "max": 300,
-            "required": false
-          }
-        ],
-        "tokens": [
-          {
-            "name": "return_value",
-            "type": "string",
-            "title": {
-              "en": "Return value",
-              "nl": "Returnwaarde"
-            },
-            "example": "42"
-          }
-        ],
-        "id": "run_named_script_with_argument"
       }
     ]
   }
