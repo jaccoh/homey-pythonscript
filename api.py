@@ -13,12 +13,9 @@ async def venvs(homey, **kwargs):
 
 
 async def delete_venv(homey, **kwargs):
-    # Homey SDK may nest body under 'body' key or pass directly
-    uid = (kwargs.get('uid')
-           or (kwargs.get('body') or {}).get('uid')
-           or '')
-    if not uid or not re.match(r'^[\w\-]+$', str(uid)):
-        raise ValueError(f"Invalid uid: {uid!r} (kwargs={list(kwargs.keys())})")
+    uid = str(kwargs.get('uid') or '')
+    if not uid or not re.match(r'^[\w\-]+$', uid):
+        raise ValueError(f"Missing or invalid uid: {uid!r}")
     vm = VenvManager(venv_root=_VENV_ROOT)
-    vm.delete(str(uid))
+    vm.delete(uid)
     return None

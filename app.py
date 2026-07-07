@@ -68,7 +68,10 @@ class PythonScriptApp(homey_app.App):
         raw_venv = card_arguments.get("venv_name") or ""
         if isinstance(raw_venv, dict):
             raw_venv = raw_venv.get("name", "")
-        card_uid = str(raw_venv).strip() or "default"
+        card_uid = str(raw_venv).strip()
+
+        if requirements and not card_uid:
+            raise ValueError("Environment name is required when using requirements")
 
         if requirements and self._vm.needs_rebuild(card_uid, requirements):
             self.log(f"Building venv '{card_uid}'")
