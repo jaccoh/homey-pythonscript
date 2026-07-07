@@ -8,23 +8,31 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: sans-serif; color: #333; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-    /* Tabs */
     .tabs { display: flex; border-bottom: 1px solid #ddd; background: #f8f8f8; flex-shrink: 0; }
     .tab { padding: 9px 16px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; user-select: none; }
     .tab.active { border-bottom-color: #3572A5; color: #3572A5; font-weight: 600; }
 
-    /* Panels */
-    .panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .panel { display: none; flex: 1; overflow: hidden; flex-direction: column; position: relative; }
     .panel.active { display: flex; }
 
-    /* Scripts tab */
-    .script-toolbar { display: flex; gap: 5px; align-items: center; padding: 6px 8px; border-bottom: 1px solid #ddd; background: #fafafa; flex-shrink: 0; flex-wrap: wrap; }
+    .script-toolbar { display: flex; gap: 5px; align-items: center; padding: 6px 8px; border-bottom: 1px solid #ddd; background: #fafafa; flex-shrink: 0; }
     .script-toolbar select { flex: 1; min-width: 0; font-size: 12px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; }
     .script-toolbar input { font-size: 12px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; }
     .script-toolbar button { font-size: 12px; padding: 4px 8px; cursor: pointer; white-space: nowrap; }
-    #name-input { width: 90px; }
-    #args-input { width: 60px; }
-    #editor-status { font-size: 11px; color: #888; width: 100%; padding: 0 2px; }
+    #args-input { flex: 1; }
+    #editor-status { font-size: 11px; color: #888; white-space: nowrap; }
+
+    /* New-script popup */
+    #new-popup {
+      display: none; position: fixed; z-index: 200;
+      background: #fff; border: 1px solid #aaa; border-radius: 5px;
+      padding: 10px; box-shadow: 0 3px 12px rgba(0,0,0,.2);
+      flex-direction: column; gap: 6px;
+    }
+    #new-popup label { font-size: 12px; color: #555; }
+    #new-name-input { font-size: 13px; padding: 5px 7px; border: 1px solid #ccc; border-radius: 3px; width: 180px; }
+    #new-create-btn { font-size: 12px; padding: 5px 10px; cursor: pointer; align-self: flex-end; }
+    #new-name-error { font-size: 11px; color: #c00; display: none; }
 
     #monaco-container { flex: 1; overflow: hidden; min-height: 0; }
     .output-panel { height: 110px; border-top: 1px solid #ddd; background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 12px; overflow-y: auto; padding: 5px 8px; flex-shrink: 0; }
@@ -65,8 +73,7 @@
       <button id="del-script-btn" style="color:#c00;display:none">Delete</button>
     </div>
     <div class="script-toolbar" style="border-top:none">
-      <input id="name-input" placeholder="name" autocomplete="off" spellcheck="false">
-      <input id="args-input" placeholder="args" autocomplete="off" spellcheck="false">
+      <input id="args-input" placeholder="args (optional)" autocomplete="off" spellcheck="false">
       <button id="save-btn">Save</button>
       <button id="run-btn">&#9654; Run</button>
       <span id="editor-status"></span>
@@ -75,6 +82,14 @@
     <div class="output-panel" id="output-panel">
       <div style="color:#555;font-size:11px">Output appears here after Run</div>
     </div>
+  </div>
+
+  <!-- New-script popup -->
+  <div id="new-popup">
+    <label>Script name</label>
+    <input id="new-name-input" placeholder="my-script" autocomplete="off" spellcheck="false">
+    <div id="new-name-error">Letters, digits, - and _ only</div>
+    <button id="new-create-btn">Create</button>
   </div>
 
   <!-- Venvs tab -->
@@ -109,11 +124,13 @@
     var editor = null;
     var currentScript = null;
     var _H = null;
+    var _NAME_RE = /^[\w\-]+$/;
 
     // Tab switching
     document.querySelectorAll('.tab').forEach(function(tab) {
       tab.addEventListener('click', function() {
         var name = tab.dataset.tab;
+        closeNewPopup();
         document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.tab === name); });
         document.querySelectorAll('.panel').forEach(function(p) { p.classList.toggle('active', p.id === 'tab-' + name); });
         if (name === 'venvs') loadVenvList();
@@ -132,11 +149,11 @@
     }
     function clearOutput() { document.getElementById('output-panel').innerHTML = ''; }
 
-    // Script dropdown
+    // Dropdown
     function loadScriptList(selectName) {
       _H.api('GET', '/scripts').then(function(scripts) {
         var sel = document.getElementById('script-select');
-        var prev = selectName || sel.value;
+        var prev = (selectName !== undefined) ? selectName : sel.value;
         sel.innerHTML = '<option value="">-- select script --</option>';
         (scripts || []).forEach(function(s) {
           var opt = document.createElement('option');
@@ -150,33 +167,80 @@
     }
 
     function updateDelBtn() {
-      var sel = document.getElementById('script-select');
-      document.getElementById('del-script-btn').style.display = sel.value ? '' : 'none';
+      document.getElementById('del-script-btn').style.display =
+        document.getElementById('script-select').value ? '' : 'none';
     }
 
     document.getElementById('script-select').addEventListener('change', function() {
       var name = this.value;
       updateDelBtn();
-      if (!name) return;
+      if (!name) { currentScript = null; return; }
       _H.api('POST', '/script-get', {name: name}).then(function(result) {
         currentScript = name;
-        document.getElementById('name-input').value = name;
         if (editor) editor.setValue(result.code || '');
         clearOutput();
         setStatus('');
       }).catch(function(e) { setStatus('Open failed: ' + (e.message || e)); });
     });
 
-    document.getElementById('new-btn').addEventListener('click', function() {
-      currentScript = null;
+    // New popup
+    var _newPopupOpen = false;
+
+    function openNewPopup() {
+      var btn = document.getElementById('new-btn');
+      var popup = document.getElementById('new-popup');
+      var r = btn.getBoundingClientRect();
+      popup.style.top = (r.bottom + 4) + 'px';
+      popup.style.left = r.left + 'px';
+      popup.style.display = 'flex';
+      _newPopupOpen = true;
+      document.getElementById('new-name-input').value = '';
+      document.getElementById('new-name-error').style.display = 'none';
+      setTimeout(function() { document.getElementById('new-name-input').focus(); }, 0);
+    }
+
+    function closeNewPopup() {
+      document.getElementById('new-popup').style.display = 'none';
+      _newPopupOpen = false;
+    }
+
+    function commitNewScript() {
+      var name = document.getElementById('new-name-input').value.trim();
+      var errEl = document.getElementById('new-name-error');
+      if (!name || !_NAME_RE.test(name)) {
+        errEl.style.display = '';
+        document.getElementById('new-name-input').focus();
+        return;
+      }
+      errEl.style.display = 'none';
+      closeNewPopup();
+      currentScript = name;
       document.getElementById('script-select').value = '';
-      document.getElementById('name-input').value = '';
-      if (editor) editor.setValue('# New script\nreturn 42');
-      clearOutput();
-      setStatus('');
       updateDelBtn();
+      if (editor) editor.setValue('# ' + name + '\nreturn 42');
+      clearOutput();
+      setStatus('New: ' + name + ' (unsaved)');
+    }
+
+    document.getElementById('new-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (_newPopupOpen) { closeNewPopup(); } else { openNewPopup(); }
     });
 
+    document.getElementById('new-create-btn').addEventListener('click', commitNewScript);
+
+    document.getElementById('new-name-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') commitNewScript();
+      if (e.key === 'Escape') closeNewPopup();
+    });
+
+    document.addEventListener('click', function(e) {
+      if (_newPopupOpen && !document.getElementById('new-popup').contains(e.target)) {
+        closeNewPopup();
+      }
+    });
+
+    // Delete script
     var _delScriptConfirm = null;
     document.getElementById('del-script-btn').addEventListener('click', function() {
       var btn = this;
@@ -189,7 +253,6 @@
         _H.api('POST', '/script-delete', {name: name}).then(function() {
           currentScript = null;
           document.getElementById('script-select').value = '';
-          document.getElementById('name-input').value = '';
           if (editor) editor.setValue('');
           clearOutput();
           setStatus('Deleted');
@@ -201,28 +264,26 @@
       }
     });
 
+    // Save
     document.getElementById('save-btn').addEventListener('click', function() {
-      var name = document.getElementById('name-input').value.trim();
+      if (!currentScript) { setStatus('Create or select a script first'); return; }
       var code = editor ? editor.getValue() : '';
-      if (!name) { setStatus('Enter a name'); return; }
-      _H.api('POST', '/script-save', {name: name, code: code}).then(function() {
-        currentScript = name;
+      _H.api('POST', '/script-save', {name: currentScript, code: code}).then(function() {
         setStatus('Saved');
-        loadScriptList(name);
+        loadScriptList(currentScript);
       }).catch(function(e) { setStatus('Save failed: ' + (e.message || e)); });
     });
 
+    // Run
     document.getElementById('run-btn').addEventListener('click', function() {
-      var name = document.getElementById('name-input').value.trim();
+      if (!currentScript) { setStatus('Create or select a script first'); return; }
       var code = editor ? editor.getValue() : '';
       var args = document.getElementById('args-input').value.trim() || null;
-      if (!name) { setStatus('Enter a name'); return; }
       clearOutput();
       setStatus('Saving...');
-      _H.api('POST', '/script-save', {name: name, code: code}).then(function() {
-        currentScript = name;
+      _H.api('POST', '/script-save', {name: currentScript, code: code}).then(function() {
         setStatus('Running...');
-        return _H.api('POST', '/script-run', {name: name, args: args});
+        return _H.api('POST', '/script-run', {name: currentScript, args: args});
       }).then(function(result) {
         if (result && result.error) {
           appendOutput('Error: ' + result.error, 'output-error');
@@ -231,14 +292,14 @@
           appendOutput('return_value: ' + ((result && result.return_value != null) ? result.return_value : '(empty)'), 'output-ok');
           setStatus('Done');
         }
-        loadScriptList(name);
+        loadScriptList(currentScript);
       }).catch(function(e) {
         appendOutput('Error: ' + (e.message || e), 'output-error');
         setStatus('Failed');
       });
     });
 
-    // Venvs tab
+    // Venvs
     function setBuildStatus(msg, isErr) {
       var el = document.getElementById('venv-build-status');
       el.textContent = msg;
@@ -259,7 +320,7 @@
     function buildVenvRow(v) {
       var tr = document.createElement('tr');
       var tdName = document.createElement('td'); tdName.textContent = v.name;
-      var tdHash = document.createElement('td'); tdHash.textContent = v.hash ? v.hash.slice(0,10)+'...' : '-';
+      var tdHash = document.createElement('td'); tdHash.textContent = v.hash ? v.hash.slice(0, 10) + '...' : '-';
       var tdBtn = document.createElement('td');
       var btn = document.createElement('button'); btn.className = 'del'; btn.textContent = 'Delete';
       var _confirm = null;
@@ -294,12 +355,12 @@
       });
     }
 
-    // Monaco init
+    // Monaco
     function initMonaco() {
       require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' } });
       require(['vs/editor/editor.main'], function() {
         editor = monaco.editor.create(document.getElementById('monaco-container'), {
-          value: '# Write your Python script here\nreturn 42',
+          value: '# Select or create a script',
           language: 'python',
           theme: 'vs',
           minimap: { enabled: false },
