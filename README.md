@@ -1,15 +1,21 @@
 # Python Script
 
-Run Python code from Homey Advanced Flows. Write scripts inline in a flow card, or use the built-in IDE to save and manage named scripts with full package support.
+Automate your home with Python. Write Python scripts directly in Homey Advanced Flows — quick one-liners in a sandboxed card, or full programs with any pip package. A built-in IDE lets you save and manage named scripts without touching a flow card.
 
 **Version:** 0.2.0 | **Requires:** Homey Pro (local) >= 13.0.0 | **Python:** 3.14
+
+---
+
+## Installation
+
+Install from the [Homey App Store](https://homey.app/en-us/app/nl.hoeve.pythonscript/) or search for **Python Script** in the Homey app.
 
 ---
 
 ## Features
 
 - **Inline sandboxed scripts** — write Python directly in a flow card, no setup needed
-- **Package support** — install any pip package into an isolated virtual environment, then use it from flow cards
+- **Package support** — install any pip package into an isolated virtual environment, then use it from flows
 - **Named scripts + IDE** — save scripts by name in the settings page (Monaco editor), select them by name in flows
 - **Homey API access** — scripts can read/write logic variables, get/set device capabilities, and trigger flows
 - **Tag output** — set flow tokens from your script using `homey.set_tag(name, value)`
@@ -20,10 +26,10 @@ Run Python code from Homey Advanced Flows. Write scripts inline in a flow card, 
 ## Flow Cards
 
 ### Run Script
-Write Python inline in the flow card. Runs in a RestrictedPython sandbox — no filesystem, no network, no subprocess. Fast and safe.
+Write Python inline in the flow card. Runs in a RestrictedPython sandbox — no filesystem, no network, no subprocess. Fast and safe for simple logic.
 
 ```python
-# Get a logic variable and return it
+# Read a logic variable and return its value
 value = await homey.logic.get_variable("temperature")
 return value
 ```
@@ -32,14 +38,14 @@ return value
 |-------|-------------|
 | Script | Python code |
 | Argument (optional) | Passed as `args` inside the script |
-| Timeout (optional) | Max execution time in seconds (default 30) |
+| Timeout (optional) | Max execution time in seconds (default: 30) |
 
 **Output token:** `return_value` (string)
 
 ---
 
 ### Run Script with Packages
-Full Python execution in an isolated virtual environment. Packages are installed once and reused. The environment is rebuilt automatically when requirements change.
+Full Python in an isolated virtual environment. Packages install once and persist; rebuilt automatically when requirements change.
 
 ```python
 import requests
@@ -60,7 +66,7 @@ return response.json()["temperature"]
 ---
 
 ### Run Named Script
-Run a script saved in the IDE. Sandbox mode and environment are configured in the IDE, not in the flow card — keeping the card simple.
+Run a script saved in the IDE. Sandbox mode and virtual environment are configured in the IDE — the flow card stays simple.
 
 | Field | Description |
 |-------|-------------|
@@ -73,20 +79,20 @@ Run a script saved in the IDE. Sandbox mode and environment are configured in th
 
 ## Settings IDE
 
-The settings page is a full Python IDE for managing named scripts and virtual environments.
+The settings page is a full Python IDE for managing scripts and virtual environments.
 
 ### Scripts tab
 
-- Select a script from the dropdown or create a new one (name-only popup)
-- Edit Python code in the Monaco editor with syntax highlighting
-- Toggle **Sandbox** mode — when disabled, select a virtual environment to run the script in
+- Select a script from the dropdown or create a new one
+- Edit code in the Monaco editor with Python syntax highlighting
+- Toggle **Sandbox** mode — when disabled, select a virtual environment
 - Run scripts directly from the IDE with live output
 - Delete scripts with a two-click confirm
 
 ### Environments tab
 
 - Create named virtual environments
-- Edit pip requirements and rebuild with **Save & Build**
+- Edit pip requirements and click **Save & Build** to install
 - Delete environments with a two-click confirm
 
 ---
@@ -114,33 +120,32 @@ homey.set_tag("temperature", 21.5)
 return "done"
 ```
 
-`args` is available as a string (or `None`) when an argument is passed from the flow card.
+`args` is a string (or `None`) when an argument is passed from the flow card.
 
 ---
 
-## Architecture
+## FAQ
 
-```
-app.py              — Homey app entry point, flow card listeners
-api.py              — REST API endpoints for the settings page
-pythonscript/
-  executor.py       — Routes to Sandbox or Runner based on config
-  sandbox.py        — RestrictedPython execution
-  runner.py         — Subprocess-based execution with venv support
-  venv_manager.py   — pip venv lifecycle (build, hash, list, delete)
-  script_manager.py — Named script storage (code + metadata)
-  homey_context.py  — homey.* API surface for scripts
-settings/
-  index.html        — IDE (Monaco editor, Scripts + Environments tabs)
-```
+**Where do I see script output or errors?**
+Run the script from the IDE settings page — output appears in the panel below the editor. In flows, errors appear as the `error` flow token on the card.
 
-Scripts are stored in `/userdata/scripts/{name}.py` with a companion `{name}.json` for metadata (sandbox flag, venv name). Virtual environments live in `/userdata/venvs/{name}/`.
+**Can the sandboxed card access the internet or files?**
+No. The **Run Script** card uses RestrictedPython — no network, no filesystem, no subprocess. Use **Run Script with Packages** or a named script with sandbox disabled for full access.
+
+**Can I install any pip package?**
+Yes. Add packages to the Requirements field in pip format (`requests==2.31.0`, `numpy>=1.26.0`). They are installed into an isolated virtual environment on your Homey.
+
+**My script times out — what do I do?**
+The default timeout is 30 seconds. Increase it in the flow card (up to 300s), or optimise the script. Network calls and heavy computation are the common causes.
+
+**Can scripts run in parallel?**
+Each flow card execution is independent. Multiple flows triggering the same named script simultaneously will each run their own process.
 
 ---
 
 ## Development
 
-**Requirements:** Python 3.14, uv
+**Requirements:** Python 3.14, [uv](https://github.com/astral-sh/uv)
 
 ```bash
 # Install dependencies
@@ -150,7 +155,29 @@ uv sync
 .venv/bin/pytest -v
 ```
 
-**Test runner note:** use `.venv/bin/pytest` directly — `python -m pytest` is blocked by a project hook.
+> Use `.venv/bin/pytest` directly. `python -m pytest` and `uv run pytest` do not work in this project.
+
+---
+
+## Architecture
+
+For contributors and developers:
+
+```
+app.py              — Homey app entry point, flow card listeners
+api.py              — REST API endpoints called by the settings page
+pythonscript/
+  executor.py       — Routes to Sandbox or Runner based on config
+  sandbox.py        — RestrictedPython execution
+  runner.py         — Subprocess execution with optional venv
+  venv_manager.py   — pip venv lifecycle (build, hash, list, delete)
+  script_manager.py — Named script storage (.py + .json metadata)
+  homey_context.py  — homey.* API surface for scripts
+settings/
+  index.html        — IDE (Monaco editor, Scripts + Environments tabs)
+```
+
+Named scripts are stored in `/userdata/scripts/` on the Homey. Virtual environments live in `/userdata/venvs/`.
 
 ---
 
@@ -158,4 +185,4 @@ uv sync
 
 MIT — see [LICENSE](LICENSE) for details.
 
-Author: Jacco Hoeve
+Author: [Jacco Hoeve](https://github.com/jaccoh)
