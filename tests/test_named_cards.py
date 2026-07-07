@@ -87,3 +87,39 @@ class TestExecuteNamedLogic:
         # card_arguments.get("script_name") or "" → None becomes ""
         raw = None or ""
         assert self._parse_script_name(raw) == ""
+
+
+import pytest
+import sys
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+
+@pytest.mark.asyncio
+async def test_execute_named_missing_script_raises_value_error(tmp_path):
+    """_execute_named wraps FileNotFoundError from ScriptManager as ValueError."""
+    # app.py imports 'homey' (the Homey SDK), which is not installed in test
+    # environments.  Inject a minimal stub so the module can be loaded.
+    homey_app_stub = MagicMock()
+    homey_app_stub.App = object  # PythonScriptApp will inherit from plain object
+    homey_stub = MagicMock()
+    homey_stub.app = homey_app_stub
+
+    with patch.dict(sys.modules, {"homey": homey_stub, "homey.app": homey_app_stub}):
+        sys.modules.pop("app", None)  # force fresh import under the stub
+        import app as app_module
+
+        try:
+            app_instance = object.__new__(app_module.PythonScriptApp)
+            app_instance._executor = MagicMock()
+
+            # Script does not exist in tmp_path → ScriptManager raises FileNotFoundError
+            # _execute_named must convert that to ValueError.
+            with patch.object(app_module, "_SCRIPTS_ROOT", tmp_path):
+                with pytest.raises(ValueError, match="not found"):
+                    await app_instance._execute_named(
+                        {"script_name": "nonexistent", "timeout": 30},
+                        args=None,
+                    )
+        finally:
+            sys.modules.pop("app", None)  # clean up so other tests are unaffected

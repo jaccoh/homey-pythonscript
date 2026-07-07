@@ -102,7 +102,10 @@ class PythonScriptApp(homey_app.App):
             raise ValueError("Script name is required")
 
         sm = ScriptManager(scripts_root=_SCRIPTS_ROOT)
-        script = sm.get_script(script_name)
+        try:
+            script = sm.get_script(script_name)
+        except FileNotFoundError:
+            raise ValueError(f"Script not found: {script_name!r}")
         timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
 
         result = await self._executor.run(
