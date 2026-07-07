@@ -182,6 +182,7 @@
     var _delConfirm = {};
     function confirmDelete(name, btn) {
       if (_delConfirm[name]) {
+        clearTimeout(_delConfirm[name]);
         delete _delConfirm[name];
         btn.textContent = 'x';
         Homey.api('POST', '/script-delete', {name: name}).then(function() {
@@ -253,6 +254,7 @@
     var _venvDelConfirm = {};
     function delVenv(uid, btn) {
       if (_venvDelConfirm[uid]) {
+        clearTimeout(_venvDelConfirm[uid]);
         delete _venvDelConfirm[uid];
         btn.textContent = 'Delete';
         btn.disabled = true;
