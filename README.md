@@ -10,6 +10,20 @@ Automate your home with Python. Write Python scripts directly in Homey Advanced 
 
 Install from the [Homey App Store](https://homey.app/en-us/app/nl.hoeve.pythonscript/) or search for **Python Script** in the Homey app.
 
+**Manual installation (while pending App Store approval)**
+
+Requires [Node.js](https://nodejs.org/) and a Homey developer account.
+
+```bash
+git clone https://github.com/jaccoh/homey-pythonscript.git
+cd homey-pythonscript
+npm install -g homey
+homey login
+homey app install
+```
+
+The app installs directly on the Homey Pro selected during `homey login`.
+
 ---
 
 ## Features
