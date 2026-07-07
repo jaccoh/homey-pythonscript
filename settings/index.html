@@ -68,6 +68,7 @@
         <div class="editor-toolbar">
           <input id="script-name-input" placeholder="script-name" autocomplete="off" spellcheck="false">
           <button id="save-btn">Save</button>
+          <input id="args-input" placeholder="args" autocomplete="off" spellcheck="false" style="width:70px">
           <button id="run-btn">&#9654; Run</button>
           <span id="editor-status"></span>
         </div>
@@ -204,7 +205,8 @@
       _H.api('POST', '/script-save', {name: name, code: code}).then(function() {
         currentScript = name;
         setEditorStatus('Running...');
-        return _H.api('POST', '/script-run', {name: name});
+        var args = document.getElementById('args-input').value.trim() || null;
+        return _H.api('POST', '/script-run', {name: name, args: args});
       }).then(function(result) {
         if (result && result.error) {
           appendOutput('Error: ' + result.error, 'output-error');
