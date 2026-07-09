@@ -1,6 +1,7 @@
 import asyncio
 import json
 import ssl
+import urllib.error
 import urllib.request
 
 
@@ -19,8 +20,12 @@ async def _homey_rest(sdk, method: str, path: str, body=None):
             headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
         )
         opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ssl_ctx))
-        with opener.open(req) as r:
-            return json.loads(r.read())
+        try:
+            with opener.open(req) as r:
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode(errors="replace")[:300]
+            raise RuntimeError(f"HTTP {e.code} {method} {path}: {detail}") from None
 
     return await asyncio.get_running_loop().run_in_executor(None, _sync)
 
