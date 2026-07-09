@@ -63,12 +63,14 @@ class _LogicContext:
         return None
 
     async def set_variable(self, name: str, value) -> None:
-        variables = await _homey_rest(self._sdk, "GET", "/api/manager/logic/variable")
-        for vid, v in variables.items():
-            if v.get("name") == name:
-                await _homey_rest(self._sdk, "PUT", f"/api/manager/logic/variable/{vid}", {**v, "value": value})
-                return
-        raise KeyError(f"Variable '{name}' not found")
+        # Homey grants apps only LOGIC_READONLY scope via get_owner_api_token().
+        # LOGIC (write) scope is hardcoded exclusively for com.athom.homeyscript.
+        # There is no supported workaround for third-party apps.
+        raise RuntimeError(
+            "homey.logic.set_variable() is not supported: Homey only grants "
+            "logic write access to HomeyScript apps. Use a Homey flow action "
+            "to set the variable instead."
+        )
 
 
 class _DevicesContext:
