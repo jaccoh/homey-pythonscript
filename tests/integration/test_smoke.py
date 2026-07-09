@@ -39,7 +39,7 @@ class TestScriptExecution:
 
     def test_set_tag(self, shs):
         r = shs.exec('homey.set_tag("score", 99)\nreturn None')
-        assert r["tags"]["score"] == "99"
+        assert r["tags"]["score"] == 99
 
     def test_multiline_script(self, shs):
         script = "x = 2\ny = 3\nreturn x * y"
