@@ -21,68 +21,78 @@ class Runner:
     ) -> dict:
         wrapper_code = generate_wrapper(script, args)
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
-            f.write(wrapper_code)
-            wrapper_file = f.name
-
-        python = self._python_executable(venv_path)
-
-        proc = await asyncio.create_subprocess_exec(
-            python,
-            wrapper_file,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-
+        wrapper_file = None
+        proc = None
         return_value = None
         tags: dict = {}
         error: str | None = None
 
-        async def _pump():
-            nonlocal return_value, error
-            while True:
-                line = await proc.stdout.readline()
-                if not line:
-                    break
-                try:
-                    msg = json.loads(line.decode())
-                except json.JSONDecodeError:
-                    continue  # skip malformed lines, don't kill the subprocess
-                match msg["type"]:
-                    case "set_tag":
-                        tags[msg["name"]] = msg["value"]
-                    case "return":
-                        return_value = msg["value"]
-                    case "error":
-                        tb = msg.get("traceback", "")
-                        if tb:
-                            # last line of traceback: "ExceptionType: message"
-                            error = tb.strip().split("\n")[-1]
-                        else:
-                            error = msg["message"]
-                    case "call":
-                        try:
-                            response = await self._dispatch(msg["method"], msg["args"])
-                            reply = json.dumps({"result": response}) + "\n"
-                        except Exception as e:
-                            reply = json.dumps({"error": str(e)}) + "\n"
-                        proc.stdin.write(reply.encode())
-                        await proc.stdin.drain()
-
         try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".py", delete=False
+            ) as f:
+                f.write(wrapper_code)
+                wrapper_file = f.name
+
+            python = self._python_executable(venv_path)
+
+            proc = await asyncio.create_subprocess_exec(
+                python,
+                wrapper_file,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+
+            async def _pump():
+                nonlocal return_value, error
+                while True:
+                    line = await proc.stdout.readline()
+                    if not line:
+                        break
+                    try:
+                        msg = json.loads(line.decode())
+                    except json.JSONDecodeError:
+                        continue  # skip malformed lines, don't kill the subprocess
+                    try:
+                        match msg.get("type"):
+                            case "set_tag":
+                                tags[msg.get("name", "")] = msg.get("value")
+                            case "return":
+                                return_value = msg.get("value")
+                            case "error":
+                                tb = msg.get("traceback", "")
+                                if tb:
+                                    # last line of traceback: "ExceptionType: message"
+                                    error = tb.strip().split("\n")[-1]
+                                else:
+                                    error = msg.get("message", "Unknown error")
+                            case "call":
+                                try:
+                                    response = await self._dispatch(msg.get("method", ""), msg.get("args", []))
+                                    reply = json.dumps({"result": response}) + "\n"
+                                except Exception as e:
+                                    reply = json.dumps({"error": str(e)}) + "\n"
+                                try:
+                                    proc.stdin.write(reply.encode())
+                                    await proc.stdin.drain()
+                                except (BrokenPipeError, ConnectionResetError, OSError):
+                                    break
+                    except Exception:
+                        continue  # skip malformed messages
+
             await asyncio.wait_for(
                 asyncio.gather(_pump(), proc.wait()),
                 timeout=timeout,
             )
         except asyncio.TimeoutError:
-            proc.kill()
-            await proc.wait()
             raise TimeoutError(f"Script exceeded {timeout}s timeout")
         finally:
-            Path(wrapper_file).unlink(missing_ok=True)
+            if proc is not None and proc.returncode is None:
+                proc.kill()
+                await proc.wait()
+            if wrapper_file:
+                Path(wrapper_file).unlink(missing_ok=True)
 
         if error:
             raise RuntimeError(error)
