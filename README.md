@@ -31,7 +31,7 @@ The app installs directly on the Homey Pro selected during `homey login`.
 - **Inline sandboxed scripts** — write Python directly in a flow card, no setup needed
 - **Package support** — install any pip package into an isolated virtual environment, then use it from flows
 - **Named scripts + IDE** — save scripts by name in the settings page (Monaco editor), select them by name in flows
-- **Homey API access** — scripts can read/write logic variables, get/set device capabilities, and trigger flows
+- **Homey API access** — scripts can set flow tags, trigger flows, and return values
 - **Tag output** — set flow tokens from your script using `homey.set_tag(name, value)`
 - **Return values** — `return value` from a script becomes the `return_value` flow token
 
@@ -43,9 +43,9 @@ The app installs directly on the Homey Pro selected during `homey login`.
 Write Python inline in the flow card. Runs in a RestrictedPython sandbox — no filesystem, no network, no subprocess. Fast and safe for simple logic.
 
 ```python
-# Read a logic variable and return its value
-value = await homey.logic.get_variable("temperature")
-return value
+# Set a tag and return a value
+homey.set_tag("temperature", 21.5)
+return "done"
 ```
 
 | Field | Description |
@@ -116,22 +116,19 @@ The settings page is a full Python IDE for managing scripts and virtual environm
 Inside any script, `homey` is available:
 
 ```python
-# Logic variables
-value = await homey.logic.get_variable("my_var")
-await homey.logic.set_variable("my_var", 42)
-
-# Device capabilities
-state = await homey.devices.get_capability(device_id, "onoff")
-await homey.devices.set_capability(device_id, "dim", 0.5)
-
 # Set a flow tag (token)
 homey.set_tag("temperature", 21.5)
+
+# Trigger a flow
+await homey.flow.trigger("my-tag", tokens={"result": "42"})
 
 # Return a value to the flow
 return "done"
 ```
 
 `args` is a string (or `None`) when an argument is passed from the flow card.
+
+> **Logic variables and device control** are not available through the `homey` object — the Homey Python SDK does not expose `homey.logic` or `homey.devices` managers. To read or write logic variables or device capabilities, call the [Homey REST API](https://api.developer.homey.app/) directly using `requests` in a venv script.
 
 ---
 

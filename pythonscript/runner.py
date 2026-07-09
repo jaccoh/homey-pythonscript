@@ -97,16 +97,6 @@ class Runner:
     async def _dispatch(self, method: str, args: list):
         ctx = HomeyContext(sdk=self._sdk)
         match method:
-            case "logic.get_variable":
-                return await ctx.logic.get_variable(*args)
-            case "logic.set_variable":
-                await ctx.logic.set_variable(*args)
-                return None
-            case "devices.get_capability":
-                return await ctx.devices.get_capability(*args)
-            case "devices.set_capability":
-                await ctx.devices.set_capability(*args)
-                return None
             case "flow.trigger":
                 tag = args[0] if args else ""
                 tokens = args[1] if len(args) > 1 else {}
