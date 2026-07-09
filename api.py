@@ -101,7 +101,10 @@ async def exec_script(homey, **kwargs):
         timeout=timeout,
         card_uid="",  # no venv — uses app's own Python via sys.executable
     )
-    return result.homey_tokens
+    return {
+        "return_value": str(result.return_value) if result.return_value is not None else "",
+        "tags": result.tags,
+    }
 
 
 async def run_script_api(homey, **kwargs):
