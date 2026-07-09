@@ -119,8 +119,15 @@ Inside any script, `homey` is available:
 # Set a flow tag (token)
 homey.set_tag("temperature", 21.5)
 
-# Trigger a flow
-await homey.flow.trigger("my-tag", tokens={"result": "42"})
+# Trigger a flow that has a "Flow triggered from Python" trigger card with matching tag
+await homey.flow.trigger("my-tag")
+
+# Read a logic variable (write is not supported — Homey restricts write access)
+value = await homey.logic.get_variable("my_variable")
+
+# Read or set a device capability
+state = await homey.devices.get_capability("device-uuid", "onoff")
+await homey.devices.set_capability("device-uuid", "onoff", False)
 
 # Return a value to the flow
 return "done"
@@ -128,7 +135,9 @@ return "done"
 
 `args` is a string (or `None`) when an argument is passed from the flow card.
 
-> **Logic variables and device control** are not available through the `homey` object — the Homey Python SDK does not expose `homey.logic` or `homey.devices` managers. To read or write logic variables or device capabilities, call the [Homey REST API](https://api.developer.homey.app/) directly using `requests` in a venv script.
+> **`homey.logic.set_variable()`** is not supported. Homey restricts logic variable write access to the HomeyScript app only. Use a Homey flow action to set variables instead.
+
+> **`homey.flow.trigger(tag)`** fires all flows that have the "Flow triggered from Python" trigger card configured with the matching tag. Add that card to a flow in the Homey app first.
 
 ---
 
