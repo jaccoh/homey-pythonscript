@@ -99,7 +99,7 @@ async def exec_script(homey, **kwargs):
         sandbox=False,
         requirements="",
         timeout=timeout,
-        card_uid="_test",
+        card_uid="",  # no venv — uses app's own Python via sys.executable
     )
     return result.homey_tokens
 

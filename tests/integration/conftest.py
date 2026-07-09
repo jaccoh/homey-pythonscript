@@ -29,7 +29,15 @@ def _cli_token() -> str | None:
     path = Path.home() / ".athom-cli" / "settings.json"
     try:
         d = json.loads(path.read_text())
-        return d.get("homeyApi", {}).get("token", {}).get("access_token")
+        homey_id = (d.get("activeHomey") or {}).get("id")
+        if homey_id:
+            key = f"homey-{homey_id}"
+            entry = (d.get("homeyApi") or {}).get(key) or {}
+            token = entry.get("token")
+            if token:
+                return token
+        # fallback: OAuth access_token (may lack session ID)
+        return (d.get("homeyApi", {}).get("token", {}) or {}).get("access_token")
     except Exception:
         return None
 
@@ -98,7 +106,7 @@ class HomeyTestClient:
             raise RuntimeError(f"HTTP {e.code} {method} {path}: {detail}") from None
 
     def app_info(self) -> dict:
-        return self._req("GET", f"/api/app/{APP_ID}")
+        return self._req("GET", f"/api/manager/apps/app/{APP_ID}")
 
     def exec(self, script: str, args=None, timeout: int = 30) -> dict:
         return self._req(
