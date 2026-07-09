@@ -42,6 +42,15 @@ class PythonScriptApp(homey_app.App):
             self._autocomplete_script_name
         )
 
+        # Trigger card: fired by scripts via homey.flow.trigger("tag")
+        self._trigger_card = self.homey.flow.get_trigger_card("python_triggered")
+        self._trigger_card.register_run_listener(self._on_python_trigger_run)
+
+    async def _on_python_trigger_run(self, args, tag=None, **_) -> bool:
+        configured_tag = (args.get("tag") or "").strip()
+        incoming_tag = (tag or "").strip()
+        return configured_tag == incoming_tag
+
     async def _autocomplete_venv_name(self, query, **_):
         existing = [v["name"] for v in self._vm.list_venvs()]
         results = [

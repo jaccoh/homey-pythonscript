@@ -1,0 +1,36 @@
+{
+  "id": "python_triggered",
+  "title": {
+    "en": "Flow triggered from Python",
+    "nl": "Flow getriggerd vanuit Python"
+  },
+  "titleFormatted": {
+    "en": "Flow triggered from Python with tag [[tag]]",
+    "nl": "Flow getriggerd vanuit Python met tag [[tag]]"
+  },
+  "args": [
+    {
+      "name": "tag",
+      "type": "text",
+      "title": {
+        "en": "Tag (optional)",
+        "nl": "Tag (optioneel)"
+      },
+      "placeholder": {
+        "en": "my-flow"
+      },
+      "required": false
+    }
+  ],
+  "tokens": [
+    {
+      "name": "result",
+      "type": "string",
+      "title": {
+        "en": "Result",
+        "nl": "Resultaat"
+      },
+      "example": "done"
+    }
+  ]
+}

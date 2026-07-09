@@ -72,7 +72,27 @@ class TestDevices:
 
 
 class TestFlow:
-    def test_flow_context_not_available(self, mock_sdk):
-        """homey.flow.trigger is not supported by the Homey Python SDK — no flow property."""
+    @pytest.mark.asyncio
+    async def test_trigger_with_tag(self, mock_sdk):
+        mock_card = AsyncMock()
+        mock_sdk.flow.get_trigger_card = MagicMock(return_value=mock_card)
         ctx = HomeyContext(sdk=mock_sdk)
-        assert not hasattr(ctx, "flow")
+        await ctx.flow.trigger("gordijn-open")
+        mock_sdk.flow.get_trigger_card.assert_called_once_with("python_triggered")
+        mock_card.trigger.assert_called_once_with({}, tag="gordijn-open")
+
+    @pytest.mark.asyncio
+    async def test_trigger_with_tokens(self, mock_sdk):
+        mock_card = AsyncMock()
+        mock_sdk.flow.get_trigger_card = MagicMock(return_value=mock_card)
+        ctx = HomeyContext(sdk=mock_sdk)
+        await ctx.flow.trigger("my-tag", tokens={"result": "42"})
+        mock_card.trigger.assert_called_once_with({"result": "42"}, tag="my-tag")
+
+    @pytest.mark.asyncio
+    async def test_trigger_no_tag(self, mock_sdk):
+        mock_card = AsyncMock()
+        mock_sdk.flow.get_trigger_card = MagicMock(return_value=mock_card)
+        ctx = HomeyContext(sdk=mock_sdk)
+        await ctx.flow.trigger()
+        mock_card.trigger.assert_called_once_with({}, tag="")

@@ -14,6 +14,19 @@ class HomeyContext:
     def devices(self):
         return _DevicesContext(self._sdk)
 
+    @property
+    def flow(self):
+        return _FlowContext(self._sdk)
+
+class _FlowContext:
+    def __init__(self, sdk):
+        self._sdk = sdk
+
+    async def trigger(self, tag: str = "", tokens: dict = None) -> None:
+        trigger_card = self._sdk.flow.get_trigger_card("python_triggered")
+        await trigger_card.trigger(tokens or {}, tag=tag)
+
+
 class _LogicContext:
     def __init__(self, sdk):
         self._sdk = sdk

@@ -107,5 +107,10 @@ class Runner:
             case "devices.set_capability":
                 await ctx.devices.set_capability(*args)
                 return None
+            case "flow.trigger":
+                tag = args[0] if args else ""
+                tokens = args[1] if len(args) > 1 else {}
+                await ctx.flow.trigger(tag, tokens)
+                return None
             case _:
                 raise ValueError(f"Unknown method: {method}")

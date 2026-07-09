@@ -72,8 +72,8 @@ class _FlowBridge:
     def __init__(self, bridge):
         self._b = bridge
 
-    async def trigger(self, flow_id: str) -> None:
-        await self._b._arpc("flow.trigger", [flow_id])
+    async def trigger(self, tag: str = "", tokens: dict = None) -> None:
+        await self._b._arpc("flow.trigger", [tag, tokens or {}])
 
 
 homey = HomeyBridge()
