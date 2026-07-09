@@ -4,7 +4,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from pythonscript.script_wrapper import generate_wrapper
+from pythonscript.script_wrapper import generate_wrapper, generate_sandbox_wrapper
 from pythonscript.homey_context import HomeyContext
 
 
@@ -18,8 +18,9 @@ class Runner:
         args,
         timeout: int,
         venv_path: Path | None = None,
+        sandboxed: bool = False,
     ) -> dict:
-        wrapper_code = generate_wrapper(script, args)
+        wrapper_code = generate_sandbox_wrapper(script, args) if sandboxed else generate_wrapper(script, args)
 
         wrapper_file = None
         proc = None

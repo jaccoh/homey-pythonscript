@@ -1,8 +1,6 @@
-import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from pythonscript.sandbox import Sandbox
 from pythonscript.runner import Runner
 from pythonscript.venv_manager import VenvManager
 
@@ -37,28 +35,19 @@ class Executor:
         card_uid: str,
     ) -> ExecutionResult:
         has_requirements = bool(requirements.strip())
-
-        if has_requirements or not sandbox:
-            venv_path = self._vm.venv_path(card_uid) if (has_requirements or (not sandbox and card_uid)) else None
-            runner = Runner(sdk=self._sdk)
-            raw = await runner.run(
-                script=script,
-                args=args,
-                timeout=timeout,
-                venv_path=venv_path,
-            )
-        else:
-            from pythonscript.homey_context import HomeyContext
-            homey_ctx = HomeyContext(sdk=self._sdk)
-            sb = Sandbox()
-            try:
-                raw = await asyncio.wait_for(
-                    sb.run(script=script, homey=homey_ctx, args=args),
-                    timeout=timeout,
-                )
-            except asyncio.TimeoutError:
-                raise TimeoutError(f"Script exceeded {timeout}s timeout")
-
+        venv_path = (
+            self._vm.venv_path(card_uid)
+            if (has_requirements or (not sandbox and card_uid))
+            else None
+        )
+        runner = Runner(sdk=self._sdk)
+        raw = await runner.run(
+            script=script,
+            args=args,
+            timeout=timeout,
+            venv_path=venv_path,
+            sandboxed=sandbox,
+        )
         return ExecutionResult(
             return_value=raw["return_value"],
             tags=raw.get("tags", {}),
