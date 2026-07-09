@@ -18,6 +18,13 @@ _DEFAULT_TIMEOUT = 30
 _VENV_NAME_RE = re.compile(r'^[\w\-]+$')
 
 
+def _parse_timeout(raw, default: int = _DEFAULT_TIMEOUT) -> int:
+    try:
+        return max(1, min(300, int(raw or default)))
+    except (ValueError, TypeError):
+        return default
+
+
 class PythonScriptApp(homey_app.App):
     async def on_init(self) -> None:
         self.log("PythonScriptApp initialised")
@@ -65,7 +72,7 @@ class PythonScriptApp(homey_app.App):
     async def _on_run_sandboxed(self, card_arguments, **_) -> dict:
         script = card_arguments.get("script", "")
         args = card_arguments.get("argument") or None
-        timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
+        timeout = _parse_timeout(card_arguments.get("timeout"))
 
         result = await self._executor.run(
             script=script,
@@ -108,7 +115,7 @@ class PythonScriptApp(homey_app.App):
         meta = sm.get_meta(script_name)
         use_sandbox = meta.get("sandbox", True)
         venv_name = meta.get("venv") or ""
-        timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
+        timeout = _parse_timeout(card_arguments.get("timeout"))
 
         result = await self._executor.run(
             script=script,
@@ -124,12 +131,14 @@ class PythonScriptApp(homey_app.App):
         script = card_arguments.get("script", "")
         args = card_arguments.get("argument") or None
         requirements = card_arguments.get("requirements", "") or ""
-        timeout = int(card_arguments.get("timeout") or _DEFAULT_TIMEOUT)
+        timeout = _parse_timeout(card_arguments.get("timeout"))
 
         raw_venv = card_arguments.get("venv_name") or ""
         if isinstance(raw_venv, dict):
             raw_venv = raw_venv.get("name", "")
         card_uid = str(raw_venv).strip()
+        if card_uid and not _VENV_NAME_RE.fullmatch(card_uid):
+            raise ValueError(f"Invalid environment name: {card_uid!r}")
 
         if requirements and not card_uid:
             raise ValueError("Environment name is required when using requirements")

@@ -23,6 +23,14 @@ class HomeyBridge:
         _send({"type": "set_tag", "name": name, "value": value})
 
     @property
+    def logic(self):
+        return _LogicBridge(self)
+
+    @property
+    def devices(self):
+        return _DevicesBridge(self)
+
+    @property
     def flow(self):
         return _FlowBridge(self)
 
@@ -36,6 +44,28 @@ class HomeyBridge:
     async def _arpc(self, method: str, args: list):
         loop = _asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._rpc, method, args)
+
+
+class _LogicBridge:
+    def __init__(self, bridge):
+        self._b = bridge
+
+    async def get_variable(self, name: str):
+        return await self._b._arpc("logic.get_variable", [name])
+
+    async def set_variable(self, name: str, value) -> None:
+        await self._b._arpc("logic.set_variable", [name, value])
+
+
+class _DevicesBridge:
+    def __init__(self, bridge):
+        self._b = bridge
+
+    async def get_capability(self, device_id: str, capability: str):
+        return await self._b._arpc("devices.get_capability", [device_id, capability])
+
+    async def set_capability(self, device_id: str, capability: str, value) -> None:
+        await self._b._arpc("devices.set_capability", [device_id, capability, value])
 
 
 class _FlowBridge:
