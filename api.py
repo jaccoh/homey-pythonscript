@@ -83,6 +83,30 @@ async def delete_script(homey, **kwargs):
     return None
 
 
+async def exec_script(homey, **kwargs):
+    """Run an inline script. Used for automated testing and CI."""
+    from pythonscript.executor import Executor
+    body = kwargs.get('body') or {}
+    script = str(body.get('script') or '')
+    args = body.get('args') or None
+    timeout = min(int(body.get('timeout') or 30), 60)
+    if not script:
+        raise ValueError("script is required")
+    executor = Executor(sdk=homey, venv_root=_VENV_ROOT)
+    result = await executor.run(
+        script=script,
+        args=args,
+        sandbox=False,
+        requirements="",
+        timeout=timeout,
+        card_uid="",  # no venv — uses app's own Python via sys.executable
+    )
+    return {
+        "return_value": str(result.return_value) if result.return_value is not None else "",
+        "tags": result.tags,
+    }
+
+
 async def run_script_api(homey, **kwargs):
     from pythonscript.executor import Executor
     body = kwargs.get('body') or {}
