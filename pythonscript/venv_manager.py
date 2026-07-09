@@ -5,12 +5,14 @@ import sys
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import ClassVar
 
 
 class VenvManager:
+    _locks: ClassVar[dict[str, asyncio.Lock]] = {}
+
     def __init__(self, venv_root: Path):
         self._root = Path(venv_root)
-        self._locks: dict[str, asyncio.Lock] = {}
 
     def _hash(self, requirements: str) -> str:
         return hashlib.sha256(requirements.strip().encode()).hexdigest()
@@ -27,9 +29,9 @@ class VenvManager:
         self._requirements_file(card_uid).write_text(requirements.strip())
 
     def _lock(self, card_uid: str) -> asyncio.Lock:
-        if card_uid not in self._locks:
-            self._locks[card_uid] = asyncio.Lock()
-        return self._locks[card_uid]
+        if card_uid not in VenvManager._locks:
+            VenvManager._locks[card_uid] = asyncio.Lock()
+        return VenvManager._locks[card_uid]
 
     def needs_rebuild(self, card_uid: str, requirements: str) -> bool:
         hf = self._hash_file(card_uid)
@@ -59,7 +61,10 @@ class VenvManager:
         return entries
 
     def venv_path(self, card_uid: str) -> Path:
-        return self._root / card_uid
+        p = (self._root / card_uid).resolve()
+        if not p.is_relative_to(self._root.resolve()):
+            raise ValueError(f"Invalid venv name: {card_uid!r}")
+        return p
 
     async def build(self, card_uid: str, requirements: str) -> None:
         """pip install requirements into venvs/{card_uid}/. Raises on failure."""
@@ -90,7 +95,8 @@ class VenvManager:
                 raise RuntimeError(f"pip install failed:\n{detail}") from None
             finally:
                 Path(req_file).unlink(missing_ok=True)
-            self._write_hash(card_uid, requirements)
         except Exception:
             shutil.rmtree(venv_dir, ignore_errors=True)
             raise
+        # hash write outside try/except — failure here doesn't destroy the venv
+        self._write_hash(card_uid, requirements)
