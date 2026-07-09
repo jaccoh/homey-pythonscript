@@ -78,3 +78,28 @@ jobs:
 
       - name: Deploy to Homey SHS
         run: homey app install
+
+  integration-test:
+    runs-on: self-hosted
+    needs: [deploy]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Restore Homey CLI settings
+        env:
+          HOMEY_ATHOM_CLI_SETTINGS: ${{ secrets.HOMEY_ATHOM_CLI_SETTINGS }}
+        run: |
+          mkdir -p ~/.athom-cli
+          printf '%s' "$HOMEY_ATHOM_CLI_SETTINGS" > ~/.athom-cli/settings.json
+
+      - name: Wait for app startup
+        run: sleep 8
+
+      - name: Run integration tests
+        env:
+          HOMEY_TEST_DEVICE_ID: 9be2fd62-8d21-4eb4-afc0-58cbb73a8215
+          HOMEY_TEST_LOGIC_VAR: zon_impact
+        run: ~/.local/bin/uv run --extra dev pytest -m integration -v
