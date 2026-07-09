@@ -9,16 +9,21 @@ def mock_sdk():
     return MagicMock()
 
 
-class TestExecutorRouting:
-    """Tests for the Executor's routing logic between Sandbox and Runner."""
+def _mock_runner(return_value=42, tags=None):
+    """Patch Runner and return (MockRunner class, instance mock)."""
+    mock_cls = MagicMock()
+    instance = mock_cls.return_value
+    instance.run = AsyncMock(return_value={"return_value": return_value, "tags": tags or {}})
+    return mock_cls, instance
 
+
+class TestExecutorRouting:
     @pytest.mark.asyncio
-    async def test_sandbox_card_uses_sandbox(self, mock_sdk, tmp_path):
-        """sandbox=True, requirements="" (the 'run_script' card) -> always uses Sandbox."""
+    async def test_sandbox_card_uses_runner_sandboxed(self, mock_sdk, tmp_path):
+        """sandbox=True -> Runner.run(..., sandboxed=True), venv_path=None."""
+        mock_cls, instance = _mock_runner(return_value=1)
         ex = Executor(sdk=mock_sdk, venv_root=tmp_path)
-        with patch("pythonscript.executor.Sandbox") as MockSandbox:
-            instance = MockSandbox.return_value
-            instance.run = AsyncMock(return_value={"return_value": 1, "tags": {}})
+        with patch("pythonscript.executor.Runner", mock_cls):
             result = await ex.run(
                 script="return 1",
                 args=None,
@@ -27,16 +32,18 @@ class TestExecutorRouting:
                 timeout=30,
                 card_uid="sandboxed",
             )
-        MockSandbox.assert_called_once()
+        mock_cls.assert_called_once()
+        kw = instance.run.call_args.kwargs
+        assert kw["sandboxed"] is True
+        assert kw["venv_path"] is None
         assert result.return_value == 1
 
     @pytest.mark.asyncio
     async def test_no_venv_sandbox_false_uses_runner_without_venv(self, mock_sdk, tmp_path):
-        """sandbox=False, requirements="", card_uid="" -> Runner, venv_path=None."""
+        """sandbox=False, requirements="", card_uid="" -> Runner, venv_path=None, sandboxed=False."""
+        mock_cls, instance = _mock_runner(return_value=42, tags={"x": 1})
         ex = Executor(sdk=mock_sdk, venv_root=tmp_path)
-        with patch("pythonscript.executor.Runner") as MockRunner:
-            instance = MockRunner.return_value
-            instance.run = AsyncMock(return_value={"return_value": 42, "tags": {"x": 1}})
+        with patch("pythonscript.executor.Runner", mock_cls):
             result = await ex.run(
                 script="return 42",
                 args=None,
@@ -45,18 +52,17 @@ class TestExecutorRouting:
                 timeout=30,
                 card_uid="",
             )
-        MockRunner.assert_called_once()
-        call_kwargs = instance.run.call_args.kwargs
-        assert call_kwargs.get("venv_path") is None
+        kw = instance.run.call_args.kwargs
+        assert kw["venv_path"] is None
+        assert kw["sandboxed"] is False
         assert result.return_value == 42
 
     @pytest.mark.asyncio
     async def test_prebuilt_venv_sandbox_false_uses_venv_path(self, mock_sdk, tmp_path):
-        """sandbox=False, requirements="", card_uid non-empty -> Runner uses pre-built venv."""
+        """sandbox=False, card_uid non-empty -> Runner uses pre-built venv."""
+        mock_cls, instance = _mock_runner()
         ex = Executor(sdk=mock_sdk, venv_root=tmp_path)
-        with patch("pythonscript.executor.Runner") as MockRunner:
-            instance = MockRunner.return_value
-            instance.run = AsyncMock(return_value={"return_value": 42, "tags": {}})
+        with patch("pythonscript.executor.Runner", mock_cls):
             await ex.run(
                 script="return 42",
                 args=None,
@@ -65,16 +71,16 @@ class TestExecutorRouting:
                 timeout=30,
                 card_uid="my-env",
             )
-        call_kwargs = instance.run.call_args.kwargs
-        assert call_kwargs.get("venv_path") == tmp_path / "my-env"
+        kw = instance.run.call_args.kwargs
+        assert kw["venv_path"] == tmp_path / "my-env"
+        assert kw["sandboxed"] is False
 
     @pytest.mark.asyncio
     async def test_packages_card_with_requirements_runner_gets_venv_path(self, mock_sdk, tmp_path):
         """sandbox=False + non-empty requirements -> Runner receives a non-None venv_path."""
+        mock_cls, instance = _mock_runner(return_value=None)
         ex = Executor(sdk=mock_sdk, venv_root=tmp_path)
-        with patch("pythonscript.executor.Runner") as MockRunner:
-            instance = MockRunner.return_value
-            instance.run = AsyncMock(return_value={"return_value": None, "tags": {}})
+        with patch("pythonscript.executor.Runner", mock_cls):
             await ex.run(
                 script="return 1",
                 args=None,
@@ -83,18 +89,15 @@ class TestExecutorRouting:
                 timeout=30,
                 card_uid="my-venv",
             )
-        MockRunner.assert_called_once()
-        call_kwargs = instance.run.call_args.kwargs
-        venv_path = call_kwargs.get("venv_path")
-        assert venv_path is not None
-        assert "my-venv" in str(venv_path)
+        kw = instance.run.call_args.kwargs
+        assert kw["venv_path"] is not None
+        assert "my-venv" in str(kw["venv_path"])
 
     @pytest.mark.asyncio
     async def test_return_value_stringified_for_homey(self, mock_sdk, tmp_path):
+        mock_cls, _ = _mock_runner(return_value=3.14)
         ex = Executor(sdk=mock_sdk, venv_root=tmp_path)
-        with patch("pythonscript.executor.Sandbox") as MockSandbox:
-            instance = MockSandbox.return_value
-            instance.run = AsyncMock(return_value={"return_value": 3.14, "tags": {}})
+        with patch("pythonscript.executor.Runner", mock_cls):
             result = await ex.run(
                 script="return 3.14",
                 args=None,
@@ -107,11 +110,10 @@ class TestExecutorRouting:
 
     @pytest.mark.asyncio
     async def test_sandbox_card_args_none_when_not_provided(self, mock_sdk, tmp_path):
-        """Sandbox card: optional argument defaults to None; Sandbox.run receives args=None."""
+        """Sandbox card: optional argument defaults to None; Runner.run receives args=None."""
+        mock_cls, instance = _mock_runner(return_value=None)
         ex = Executor(sdk=mock_sdk, venv_root=tmp_path)
-        with patch("pythonscript.executor.Sandbox") as MockSandbox:
-            instance = MockSandbox.return_value
-            instance.run = AsyncMock(return_value={"return_value": None, "tags": {}})
+        with patch("pythonscript.executor.Runner", mock_cls):
             await ex.run(
                 script="return args",
                 args=None,
@@ -120,36 +122,28 @@ class TestExecutorRouting:
                 timeout=30,
                 card_uid="sandboxed",
             )
-        call_kwargs = instance.run.call_args.kwargs
-        assert call_kwargs.get("args") is None
+        kw = instance.run.call_args.kwargs
+        assert kw.get("args") is None
 
     @pytest.mark.asyncio
-    async def test_sandbox_timeout_raises_timeout_error(self, mock_sdk, tmp_path):
-        """When sandbox execution exceeds the timeout, a TimeoutError is raised."""
+    async def test_sandbox_timeout_passed_to_runner(self, mock_sdk, tmp_path):
+        """Executor passes the timeout value through to Runner.run()."""
+        mock_cls, instance = _mock_runner(return_value=None)
         ex = Executor(sdk=mock_sdk, venv_root=tmp_path)
-        with patch("pythonscript.executor.Sandbox") as MockSandbox:
-            instance = MockSandbox.return_value
-
-            async def _hang(*args, **kwargs):
-                await asyncio.sleep(10)
-                return {"return_value": None, "tags": {}}
-
-            instance.run = _hang
-
-            with pytest.raises(TimeoutError):
-                await ex.run(
-                    script="import time\ntime.sleep(999)",
-                    args=None,
-                    sandbox=True,
-                    requirements="",
-                    timeout=0.05,
-                    card_uid="sandboxed",
-                )
+        with patch("pythonscript.executor.Runner", mock_cls):
+            await ex.run(
+                script="return None",
+                args=None,
+                sandbox=True,
+                requirements="",
+                timeout=7,
+                card_uid="sandboxed",
+            )
+        kw = instance.run.call_args.kwargs
+        assert kw["timeout"] == 7
 
 
 class TestHomeyTokens:
-    """Tests for ExecutionResult.homey_tokens dict that Homey receives."""
-
     def test_homey_tokens_always_has_return_value_key(self):
         result = ExecutionResult(return_value="hello")
         assert "return_value" in result.homey_tokens
@@ -159,7 +153,6 @@ class TestHomeyTokens:
         assert "error" in result.homey_tokens
 
     def test_homey_tokens_return_value_empty_string_when_none(self):
-        """None return_value is represented as empty string (not the string 'None')."""
         result = ExecutionResult(return_value=None)
         assert result.homey_tokens["return_value"] == ""
 

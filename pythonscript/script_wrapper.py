@@ -100,6 +100,63 @@ _asyncio.run(_main())
 '''
 
 
+_SANDBOX_RUNNER = '''
+import operator as _op
+from RestrictedPython import compile_restricted_function as _crf, safe_builtins as _sb
+from RestrictedPython.Guards import safer_getattr as _sga, full_write_guard as _fwg
+
+_ALLOWED = frozenset({{
+    "math", "json", "datetime", "re", "collections", "itertools",
+    "functools", "string", "decimal", "fractions", "statistics",
+}})
+
+
+def _restricted_import(name, *args, **kwargs):
+    if name.split(".")[0] not in _ALLOWED:
+        raise Exception(f"import '{{name}}' not allowed in sandboxed mode")
+    return __import__(name, *args, **kwargs)
+
+
+def _safe_getattr(obj, name, *args):
+    if isinstance(name, str) and name.startswith("_"):
+        raise AttributeError(f"access to '{{name}}' not allowed")
+    return _sga(obj, name, *args) if args else _sga(obj, name)
+
+
+def _blocked(*args, **kwargs):
+    raise Exception("not allowed in sandboxed mode")
+
+
+_bi = dict(_sb)
+_bi["__import__"] = _restricted_import
+for _bname in ("open", "exec", "eval", "compile"):
+    _bi[_bname] = _blocked
+
+args = {args_repr}
+_body = {script_repr}
+_compiled = _crf(p="homey, args", body=_body, name="script_fn", filename="<script>")
+
+try:
+    if _compiled.errors:
+        _msg = "; ".join(_compiled.errors)
+        _exc = SyntaxError if any(": SyntaxError:" in e for e in _compiled.errors) else Exception
+        raise _exc(_msg)
+    _ns = {{
+        "__builtins__": _bi,
+        "_getattr_": _safe_getattr,
+        "_getitem_": _op.getitem,
+        "_getiter_": iter,
+        "_write_": _fwg,
+    }}
+    exec(_compiled.code, _ns)
+    _result = _ns["script_fn"](homey, args)
+    _send({{"type": "return", "value": _result}})
+except Exception as _e:
+    import traceback as _tb
+    _send({{"type": "error", "message": str(_e), "traceback": _tb.format_exc()}})
+'''
+
+
 def generate_wrapper(script: str, args) -> str:
     user_body = textwrap.indent(textwrap.dedent(script), "    ")
     tail = _RUNNER_TEMPLATE.format(
@@ -107,3 +164,10 @@ def generate_wrapper(script: str, args) -> str:
         user_body=user_body,
     )
     return _BRIDGE_SOURCE + tail
+
+
+def generate_sandbox_wrapper(script: str, args) -> str:
+    return _BRIDGE_SOURCE + _SANDBOX_RUNNER.format(
+        args_repr=repr(args),
+        script_repr=repr(script),
+    )
