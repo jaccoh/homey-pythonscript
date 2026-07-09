@@ -66,7 +66,7 @@ class _LogicContext:
         variables = await _homey_rest(self._sdk, "GET", "/api/manager/logic/variable")
         for vid, v in variables.items():
             if v.get("name") == name:
-                await _homey_rest(self._sdk, "PUT", f"/api/manager/logic/variable/{vid}", {"value": value})
+                await _homey_rest(self._sdk, "PUT", f"/api/manager/logic/variable/{vid}", {**v, "value": value})
                 return
         raise KeyError(f"Variable '{name}' not found")
 

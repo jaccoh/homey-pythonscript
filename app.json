@@ -38,9 +38,7 @@
     "restrictedpython>=7.0.0"
   ],
   "permissions": [
-    "homey:manager:api",
-    "homey:manager:logic",
-    "homey:manager:devices"
+    "homey:manager:api"
   ],
   "api": {
     "venvs": {
