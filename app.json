@@ -1,6 +1,6 @@
 {
   "id": "nl.hoeve.pythonscript",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "compatibility": ">=13.0.0",
   "runtime": "python",
   "pythonVersion": "3.14",
