@@ -1,3 +1,30 @@
+import asyncio
+import json
+import ssl
+import urllib.request
+
+
+async def _homey_rest(sdk, method: str, path: str, body=None):
+    token = await sdk.api.get_owner_api_token()
+    local_url = await sdk.api.get_local_url()
+    url = f"{local_url}{path}"
+    ssl_ctx = ssl.create_default_context()
+    ssl_ctx.check_hostname = False
+    ssl_ctx.verify_mode = ssl.CERT_NONE
+
+    def _sync():
+        data = json.dumps(body).encode() if body is not None else None
+        req = urllib.request.Request(
+            url, data=data, method=method,
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        )
+        opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ssl_ctx))
+        with opener.open(req) as r:
+            return json.loads(r.read())
+
+    return await asyncio.get_running_loop().run_in_executor(None, _sync)
+
+
 class HomeyContext:
     def __init__(self, sdk):
         self._sdk = sdk
@@ -24,18 +51,17 @@ class _LogicContext:
         self._sdk = sdk
 
     async def get_variable(self, name: str):
-        variables = await self._sdk.api.get("/manager/logic/variable")
+        variables = await _homey_rest(self._sdk, "GET", "/api/manager/logic/variable")
         for v in variables.values():
             if v.get("name") == name:
                 return v.get("value")
         return None
 
     async def set_variable(self, name: str, value) -> None:
-        variables = await self._sdk.api.get("/manager/logic/variable")
+        variables = await _homey_rest(self._sdk, "GET", "/api/manager/logic/variable")
         for vid, v in variables.items():
             if v.get("name") == name:
-                # SDK put() is missing internal await — double-await required
-                await (await self._sdk.api.put(f"/manager/logic/variable/{vid}", {"value": value}))
+                await _homey_rest(self._sdk, "PUT", f"/api/manager/logic/variable/{vid}", {"value": value})
                 return
         raise KeyError(f"Variable '{name}' not found")
 
@@ -45,16 +71,17 @@ class _DevicesContext:
         self._sdk = sdk
 
     async def get_capability(self, device_id: str, capability: str):
-        device = await self._sdk.api.get(f"/manager/devices/device/{device_id}")
+        device = await _homey_rest(self._sdk, "GET", f"/api/manager/devices/device/{device_id}")
         caps = device.get("capabilitiesObj") or {}
         cap = caps.get(capability) or {}
         return cap.get("value")
 
     async def set_capability(self, device_id: str, capability: str, value) -> None:
-        await (await self._sdk.api.put(
-            f"/manager/devices/device/{device_id}/capability/{capability}",
+        await _homey_rest(
+            self._sdk, "PUT",
+            f"/api/manager/devices/device/{device_id}/capability/{capability}",
             {"value": value},
-        ))
+        )
 
 
 class _FlowContext:
@@ -64,5 +91,3 @@ class _FlowContext:
     async def trigger(self, tag: str = "") -> None:
         trigger_card = self._sdk.flow.get_trigger_card("python_triggered")
         await trigger_card.trigger({}, tag=tag)
-
-
