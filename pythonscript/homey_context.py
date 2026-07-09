@@ -14,11 +14,6 @@ class HomeyContext:
     def devices(self):
         return _DevicesContext(self._sdk)
 
-    @property
-    def flow(self):
-        return _FlowContext(self._sdk)
-
-
 class _LogicContext:
     def __init__(self, sdk):
         self._sdk = sdk
@@ -52,9 +47,3 @@ class _DevicesContext:
         await device.set_capability_value(capability, value)
 
 
-class _FlowContext:
-    def __init__(self, sdk):
-        self._sdk = sdk
-
-    async def trigger(self, flow_id: str) -> None:
-        await self._sdk.flow.run_flow_card_trigger(flow_id)

@@ -72,9 +72,7 @@ class TestDevices:
 
 
 class TestFlow:
-    @pytest.mark.asyncio
-    async def test_trigger(self, mock_sdk):
-        mock_sdk.flow.run_flow_card_trigger = AsyncMock()
+    def test_flow_context_not_available(self, mock_sdk):
+        """homey.flow.trigger is not supported by the Homey Python SDK — no flow property."""
         ctx = HomeyContext(sdk=mock_sdk)
-        await ctx.flow.trigger("flow-id-123")
-        mock_sdk.flow.run_flow_card_trigger.assert_called_once()
+        assert not hasattr(ctx, "flow")

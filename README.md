@@ -124,9 +124,6 @@ await homey.logic.set_variable("my_var", 42)
 state = await homey.devices.get_capability(device_id, "onoff")
 await homey.devices.set_capability(device_id, "dim", 0.5)
 
-# Trigger a flow
-await homey.flow.trigger("my_flow_id")
-
 # Set a flow tag (token)
 homey.set_tag("temperature", 21.5)
 
