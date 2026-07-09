@@ -72,6 +72,10 @@
     "run_script_api": {
       "method": "POST",
       "path": "/script-run"
+    },
+    "exec_script": {
+      "method": "POST",
+      "path": "/exec"
     }
   },
   "flow": {
