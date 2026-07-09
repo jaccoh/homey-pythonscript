@@ -99,8 +99,7 @@ class Runner:
         match method:
             case "flow.trigger":
                 tag = args[0] if args else ""
-                tokens = args[1] if len(args) > 1 else {}
-                await ctx.flow.trigger(tag, tokens)
+                await ctx.flow.trigger(tag)
                 return None
             case _:
                 raise ValueError(f"Unknown method: {method}")

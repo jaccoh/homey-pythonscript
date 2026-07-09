@@ -14,8 +14,8 @@ class _FlowContext:
     def __init__(self, sdk):
         self._sdk = sdk
 
-    async def trigger(self, tag: str = "", tokens: dict = None) -> None:
+    async def trigger(self, tag: str = "") -> None:
         trigger_card = self._sdk.flow.get_trigger_card("python_triggered")
-        await trigger_card.trigger(tokens or {}, tag=tag)
+        await trigger_card.trigger({}, tag=tag)
 
 

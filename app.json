@@ -100,17 +100,7 @@
             "required": false
           }
         ],
-        "tokens": [
-          {
-            "name": "result",
-            "type": "string",
-            "title": {
-              "en": "Result",
-              "nl": "Resultaat"
-            },
-            "example": "done"
-          }
-        ]
+        "tokens": []
       }
     ],
     "actions": [
