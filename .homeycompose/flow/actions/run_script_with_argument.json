@@ -39,6 +39,7 @@
     }
   ],
   "tokens": [
-    { "name": "return_value", "type": "string", "title": { "en": "Return value", "nl": "Returnwaarde" }, "example": "42" }
+    { "name": "return_value", "type": "string", "title": { "en": "Return value", "nl": "Returnwaarde" }, "example": "42" },
+    { "name": "error", "type": "string", "title": { "en": "Error", "nl": "Fout" }, "example": { "en": "SyntaxError: invalid syntax" } }
   ]
 }

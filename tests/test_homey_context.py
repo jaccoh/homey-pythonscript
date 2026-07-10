@@ -11,17 +11,26 @@ def mock_sdk():
     return sdk
 
 
-class TestSetTag:
-    def test_set_tag_stores_value(self, mock_sdk):
-        ctx = HomeyContext(sdk=mock_sdk)
-        ctx.set_tag("temp", 22.5)
-        assert ctx._tags["temp"] == 22.5
+class TestHomeyContextInterface:
+    """Verify HomeyContext exposes the right interface (no dead code)."""
 
-    def test_set_tag_multiple(self, mock_sdk):
+    def test_has_no_set_tag(self, mock_sdk):
+        # set_tag was dead code — runner.py pump handles "set_tag" IPC directly.
+        # This test prevents re-introduction of the removed method.
         ctx = HomeyContext(sdk=mock_sdk)
-        ctx.set_tag("a", 1)
-        ctx.set_tag("b", "hello")
-        assert ctx._tags == {"a": 1, "b": "hello"}
+        assert not hasattr(ctx, "set_tag")
+
+    def test_has_logic_property(self, mock_sdk):
+        ctx = HomeyContext(sdk=mock_sdk)
+        assert hasattr(ctx, "logic")
+
+    def test_has_devices_property(self, mock_sdk):
+        ctx = HomeyContext(sdk=mock_sdk)
+        assert hasattr(ctx, "devices")
+
+    def test_has_flow_property(self, mock_sdk):
+        ctx = HomeyContext(sdk=mock_sdk)
+        assert hasattr(ctx, "flow")
 
 
 class TestFlow:

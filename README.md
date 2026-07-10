@@ -32,8 +32,8 @@ The app installs directly on the Homey Pro selected during `homey login`.
 - **Package support** — install any pip package into an isolated virtual environment, then use it from flows
 - **Named scripts + IDE** — save scripts by name in the settings page (Monaco editor), select them by name in flows
 - **Homey API access** — scripts can set flow tags, trigger flows, and return values
-- **Tag output** — set flow tokens from your script using `homey.set_tag(name, value)`
-- **Return values** — `return value` from a script becomes the `return_value` flow token
+- **Tag output** — `homey.set_tag(name, value)` stores key-value pairs in the exec_script API response and IDE run panel; not visible as tokens in the flow editor
+- **Return values** — `return value` from a script becomes the `return_value` flow token; `error` is set automatically on failure
 
 ---
 
@@ -43,8 +43,8 @@ The app installs directly on the Homey Pro selected during `homey login`.
 Write Python inline in the flow card. Runs in a RestrictedPython sandbox — no filesystem, no network, no subprocess. Fast and safe for simple logic.
 
 ```python
-# Set a tag and return a value
-homey.set_tag("temperature", 21.5)
+# Return a value to the flow
+homey.set_tag("temperature", 21.5)  # stored in API response, not a flow token
 return "done"
 ```
 
@@ -54,7 +54,9 @@ return "done"
 | Argument (optional) | Passed as `args` inside the script |
 | Timeout (optional) | Max execution time in seconds (default: 30) |
 
-**Output token:** `return_value` (string)
+**Output tokens:** `return_value` (string), `error` (string, empty on success)
+
+> **Sandbox restrictions:** `homey.logic`, `homey.devices`, and `homey.flow` are not available in sandboxed scripts — calling them raises a `RuntimeError`. Only `homey.set_tag()` and `return` work.
 
 ---
 
@@ -75,7 +77,7 @@ return response.json()["temperature"]
 | Environment name | Name for the virtual environment (autocomplete from existing) |
 | Timeout (optional) | Max execution time in seconds |
 
-**Output token:** `return_value` (string)
+**Output tokens:** `return_value` (string), `error` (string, empty on success)
 
 ---
 
@@ -87,7 +89,7 @@ Run a script saved in the IDE. Sandbox mode and virtual environment are configur
 | Script | Autocomplete from saved scripts |
 | Argument (optional) | Passed as `args` |
 
-**Output token:** `return_value` (string)
+**Output tokens:** `return_value` (string), `error` (string, empty on success)
 
 ---
 
@@ -116,7 +118,7 @@ The settings page is a full Python IDE for managing scripts and virtual environm
 Inside any script, `homey` is available:
 
 ```python
-# Set a flow tag (token)
+# Store a tag value (returned in exec_script API response and IDE run panel)
 homey.set_tag("temperature", 21.5)
 
 # Trigger a flow that has a "Flow triggered from Python" trigger card with matching tag
@@ -135,9 +137,21 @@ return "done"
 
 `args` is a string (or `None`) when an argument is passed from the flow card.
 
+> **`homey.set_tag(name, value)`** does **not** create a flow card token. Tag values are returned in the exec_script API response (`tags` key) and displayed in the IDE run panel. They are not visible in the Homey flow editor. Use `return value` to pass data to subsequent flow cards via the `return_value` token.
+
 > **`homey.logic.set_variable()`** is not supported. Homey restricts logic variable write access to the HomeyScript app only. Use a Homey flow action to set variables instead.
 
 > **`homey.flow.trigger(tag)`** fires all flows that have the "Flow triggered from Python" trigger card configured with the matching tag. Add that card to a flow in the Homey app first.
+
+### Sandboxed vs non-sandboxed capabilities
+
+| API | Sandboxed ("Run Script") | Non-sandboxed |
+|-----|--------------------------|---------------|
+| `return value` → `return_value` flow token | Yes | Yes |
+| `homey.set_tag()` | Yes | Yes |
+| `homey.logic.*` | No — raises `RuntimeError` | Yes |
+| `homey.devices.*` | No — raises `RuntimeError` | Yes |
+| `homey.flow.*` | No — raises `RuntimeError` | Yes |
 
 ---
 

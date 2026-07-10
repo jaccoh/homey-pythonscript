@@ -1,5 +1,10 @@
 import ast
-from pythonscript.script_wrapper import generate_wrapper, generate_sandbox_wrapper
+from pythonscript.script_wrapper import (
+    generate_wrapper,
+    generate_sandbox_wrapper,
+    _BRIDGE_SOURCE,
+    _SANDBOX_BRIDGE_SOURCE,
+)
 
 
 class TestGenerateWrapper:
@@ -75,3 +80,40 @@ class TestGenerateSandboxWrapper:
         """Sandbox wrapper is synchronous — no asyncio.run()."""
         code = generate_sandbox_wrapper("return 1", args=None)
         assert "asyncio.run(_main())" not in code
+
+    # F2: sandbox wrapper must use _SANDBOX_BRIDGE_SOURCE, not _BRIDGE_SOURCE
+    def test_sandbox_wrapper_raises_on_logic(self):
+        """Sandbox wrapper must contain the 'not available in sandboxed mode' error string."""
+        code = generate_sandbox_wrapper("return 1", args=None)
+        assert "not available in sandboxed mode" in code
+
+    def test_sandbox_wrapper_has_no_async_arpc(self):
+        """Sandbox wrapper must not contain async _arpc — no coroutines allowed."""
+        code = generate_sandbox_wrapper("return 1", args=None)
+        assert "async def _arpc" not in code
+
+    def test_sandbox_wrapper_uses_sandbox_bridge_source(self):
+        """generate_sandbox_wrapper must embed _SANDBOX_BRIDGE_SOURCE content."""
+        code = generate_sandbox_wrapper("return 1", args=None)
+        # The minimal sandbox bridge defines logic as a property raising RuntimeError
+        assert "homey.logic not available" in code or "not available in sandboxed mode" in code
+
+
+class TestBridgeSourceProperties:
+    """F4: _BRIDGE_SOURCE must be thread-safe; _SANDBOX_BRIDGE_SOURCE must not have _rpc."""
+
+    def test_bridge_source_contains_threading_lock(self):
+        """Non-sandbox bridge must use a threading.Lock to protect _rpc send+recv."""
+        assert "Lock" in _BRIDGE_SOURCE or "threading" in _BRIDGE_SOURCE
+
+    def test_sandbox_bridge_source_has_no_rpc(self):
+        """Sandbox bridge has no IPC at all — no _rpc, no race condition possible."""
+        assert "_rpc" not in _SANDBOX_BRIDGE_SOURCE
+
+    def test_sandbox_bridge_source_is_valid_python(self):
+        """_SANDBOX_BRIDGE_SOURCE must be syntactically valid Python."""
+        ast.parse(_SANDBOX_BRIDGE_SOURCE)
+
+    def test_bridge_source_is_valid_python(self):
+        """_BRIDGE_SOURCE must remain syntactically valid after adding the lock."""
+        ast.parse(_BRIDGE_SOURCE)

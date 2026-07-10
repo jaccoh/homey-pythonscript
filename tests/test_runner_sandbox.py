@@ -134,6 +134,42 @@ class TestSandboxSubprocessErrors:
             await _run(sdk, "return undefined_var")
 
 
+class TestSandboxBridgeRaisesOnUnavailableAPIs:
+    """F2: sandbox bridge must raise RuntimeError for logic/devices/flow, not silently return coroutines."""
+
+    @pytest.mark.asyncio
+    async def test_logic_get_variable_raises_runtime_error(self, sdk):
+        with pytest.raises(RuntimeError, match="not available in sandboxed mode"):
+            await _run(sdk, "homey.logic.get_variable('x')")
+
+    @pytest.mark.asyncio
+    async def test_devices_get_capability_raises_runtime_error(self, sdk):
+        with pytest.raises(RuntimeError, match="not available in sandboxed mode"):
+            await _run(sdk, "homey.devices.get_capability('dev-id', 'onoff')")
+
+    @pytest.mark.asyncio
+    async def test_devices_set_capability_raises_runtime_error(self, sdk):
+        with pytest.raises(RuntimeError, match="not available in sandboxed mode"):
+            await _run(sdk, "homey.devices.set_capability('dev-id', 'onoff', True)")
+
+    @pytest.mark.asyncio
+    async def test_flow_trigger_raises_runtime_error(self, sdk):
+        with pytest.raises(RuntimeError, match="not available in sandboxed mode"):
+            await _run(sdk, "homey.flow.trigger('tag')")
+
+    @pytest.mark.asyncio
+    async def test_set_tag_still_works_after_bridge_change(self, sdk):
+        """homey.set_tag must still work — it is the only supported sandbox IPC."""
+        r = await _run(sdk, "homey.set_tag('key', 'val')\nreturn None")
+        assert r["tags"]["key"] == "val"
+
+    @pytest.mark.asyncio
+    async def test_error_message_mentions_sandboxed_mode(self, sdk):
+        """RuntimeError from logic/devices/flow must guide user to the right card."""
+        with pytest.raises(RuntimeError, match="sandboxed mode"):
+            await _run(sdk, "homey.logic.get_variable('y')")
+
+
 class TestSandboxTimeoutKillsProcess:
     @pytest.mark.asyncio
     async def test_infinite_loop_killed_within_timeout(self, sdk):

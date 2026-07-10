@@ -27,6 +27,7 @@ class Runner:
         return_value = None
         tags: dict = {}
         error: str | None = None
+        stderr_text: str = ""
 
         try:
             with tempfile.NamedTemporaryFile(
@@ -82,8 +83,13 @@ class Runner:
                     except Exception:
                         continue  # skip malformed messages
 
+            async def _drain_stderr():
+                nonlocal stderr_text
+                data = await proc.stderr.read()
+                stderr_text = data.decode(errors="replace")
+
             await asyncio.wait_for(
-                asyncio.gather(_pump(), proc.wait()),
+                asyncio.gather(_pump(), _drain_stderr(), proc.wait()),
                 timeout=timeout,
             )
         except asyncio.TimeoutError:
@@ -97,6 +103,12 @@ class Runner:
 
         if error:
             raise RuntimeError(error)
+
+        if proc is not None and proc.returncode != 0:
+            tail = stderr_text.strip()[-500:]
+            raise RuntimeError(
+                f"Script process exited with code {proc.returncode}\n{tail}"
+            )
 
         return {"return_value": return_value, "tags": tags}
 
