@@ -4,7 +4,7 @@
 
 | ID | Finding | Status | Notes |
 |----|---------|--------|-------|
-| F1 | Silent subprocess crash (no stderr, no returncode check) | TODO | runner.py |
+| F1 | Silent subprocess crash (no stderr, no returncode check) | DONE | runner.py — 6 new tests |
 | F2 | Sandbox bridge: logic/devices/flow return unawaited coroutines | TODO | script_wrapper.py |
 | F4 | `_rpc` not thread-safe (concurrent IPC races) | TODO | script_wrapper.py |
 | F5 | `sandbox.py` dead code (entirely unused) | TODO | delete file |
