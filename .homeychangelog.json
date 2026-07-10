@@ -7,5 +7,8 @@
   },
   "0.2.3": {
     "en": "Better testing"
+  },
+  "0.3.0": {
+    "en": "Lot's of testing and fixing dead-ends and cleaning up older code"
   }
 }
