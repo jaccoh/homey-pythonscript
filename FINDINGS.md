@@ -10,7 +10,7 @@
 | F5 | `sandbox.py` dead code (entirely unused) | DONE | deleted sandbox.py + test_sandbox.py; coverage in test_runner_sandbox.py |
 | F6 | `HomeyContext.set_tag()` + `_tags` dead (never called in live path) | DONE | homey_context.py — removed, regression test added |
 | F7 | `error` key in `homey_tokens` has no flow card token declaration | DONE | .homeycompose + app.json — error token added to all 3 action cards |
-| F8 | `homey.set_tag()` invisible to flow editor (undocumented gap) | TODO | README |
+| F8 | `homey.set_tag()` invisible to flow editor (undocumented gap) | DONE | README |
 
 ## Details
 
