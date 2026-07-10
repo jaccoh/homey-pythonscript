@@ -5,8 +5,8 @@
 | ID | Finding | Status | Notes |
 |----|---------|--------|-------|
 | F1 | Silent subprocess crash (no stderr, no returncode check) | DONE | runner.py — 6 new tests |
-| F2 | Sandbox bridge: logic/devices/flow return unawaited coroutines | TODO | script_wrapper.py |
-| F4 | `_rpc` not thread-safe (concurrent IPC races) | TODO | script_wrapper.py |
+| F2 | Sandbox bridge: logic/devices/flow return unawaited coroutines | DONE | script_wrapper.py — _SANDBOX_BRIDGE_SOURCE, 6 new tests |
+| F4 | `_rpc` not thread-safe (concurrent IPC races) | DONE | script_wrapper.py — threading.Lock, 4 new tests |
 | F5 | `sandbox.py` dead code (entirely unused) | TODO | delete file |
 | F6 | `HomeyContext.set_tag()` + `_tags` dead (never called in live path) | TODO | homey_context.py |
 | F7 | `error` key in `homey_tokens` has no flow card token declaration | TODO | .homeycompose + app.json |

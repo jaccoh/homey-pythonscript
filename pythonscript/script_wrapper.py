@@ -4,9 +4,12 @@ _BRIDGE_SOURCE = '''
 import sys as _sys
 import json as _json
 import asyncio as _asyncio
+import threading as _threading
 
 _real_stdout = _sys.stdout
 _sys.stdout = _sys.stderr
+
+_rpc_lock = _threading.Lock()
 
 
 def _send(msg: dict) -> None:
@@ -35,8 +38,9 @@ class HomeyBridge:
         return _FlowBridge(self)
 
     def _rpc(self, method: str, args: list):
-        _send({"type": "call", "method": method, "args": args})
-        response = _recv()
+        with _rpc_lock:
+            _send({"type": "call", "method": method, "args": args})
+            response = _recv()
         if "error" in response:
             raise RuntimeError(response["error"])
         return response["result"]
@@ -74,6 +78,46 @@ class _FlowBridge:
 
     async def trigger(self, tag: str = "") -> None:
         await self._b._arpc("flow.trigger", [tag])
+
+
+homey = HomeyBridge()
+'''
+
+_SANDBOX_BRIDGE_SOURCE = '''
+import sys as _sys, json as _json
+_real_stdout = _sys.stdout
+_sys.stdout = _sys.stderr
+
+
+def _send(msg):
+    _real_stdout.write(_json.dumps(msg) + "\\n")
+    _real_stdout.flush()
+
+
+class HomeyBridge:
+    def set_tag(self, name, value):
+        _send({"type": "set_tag", "name": name, "value": value})
+
+    @property
+    def logic(self):
+        raise RuntimeError(
+            "homey.logic not available in sandboxed mode. "
+            "Use the non-sandboxed Run Script with Packages card."
+        )
+
+    @property
+    def devices(self):
+        raise RuntimeError(
+            "homey.devices not available in sandboxed mode. "
+            "Use the non-sandboxed Run Script with Packages card."
+        )
+
+    @property
+    def flow(self):
+        raise RuntimeError(
+            "homey.flow not available in sandboxed mode. "
+            "Use the non-sandboxed Run Script with Packages card."
+        )
 
 
 homey = HomeyBridge()
@@ -167,7 +211,7 @@ def generate_wrapper(script: str, args) -> str:
 
 
 def generate_sandbox_wrapper(script: str, args) -> str:
-    return _BRIDGE_SOURCE + _SANDBOX_RUNNER.format(
+    return _SANDBOX_BRIDGE_SOURCE + _SANDBOX_RUNNER.format(
         args_repr=repr(args),
         script_repr=repr(script),
     )

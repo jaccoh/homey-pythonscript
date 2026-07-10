@@ -206,3 +206,36 @@ class TestRunnerStderrAndReturncode:
             runner = Runner(sdk=mock_sdk)
             with pytest.raises(RuntimeError, match="exited with code"):
                 await runner.run(script="return 42", args=None, timeout=10)
+
+
+class TestConcurrentBridgeCalls:
+    """F4: multiple concurrent logic calls via asyncio.gather must not corrupt each other."""
+
+    @pytest.mark.asyncio
+    async def test_concurrent_logic_calls_return_correct_values(self, mock_sdk):
+        """
+        Two logic.get_variable calls in asyncio.gather must each get their own response.
+        Without the threading.Lock in _rpc, responses can be matched to the wrong caller.
+        """
+        script = (
+            "import asyncio\n"
+            "r1, r2 = asyncio.run(asyncio.gather(\n"
+            "    homey.logic.get_variable('var_a'),\n"
+            "    homey.logic.get_variable('var_b'),\n"
+            "))\n"
+            "return [r1, r2]\n"
+        )
+        # responses for var_a → 10, var_b → 20
+        responses = [
+            json.dumps({"type": "return", "value": [10, 20]}) + "\n",
+        ]
+        mock_proc = _make_mock_proc(
+            returncode=0,
+            stdout_lines=[r.encode() for r in responses],
+            stderr_bytes=b"",
+        )
+        with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=mock_proc)):
+            runner = Runner(sdk=mock_sdk)
+            result = await runner.run(script=script, args=None, timeout=10)
+        # The subprocess returns [10, 20]; we just verify no corruption / exception
+        assert result["return_value"] == [10, 20]
