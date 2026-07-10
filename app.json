@@ -152,6 +152,17 @@
               "nl": "Returnwaarde"
             },
             "example": "42"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "title": {
+              "en": "Error",
+              "nl": "Fout"
+            },
+            "example": {
+              "en": "SyntaxError: invalid syntax"
+            }
           }
         ],
         "id": "run_named_script"
@@ -214,6 +225,17 @@
               "nl": "Returnwaarde"
             },
             "example": "42"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "title": {
+              "en": "Error",
+              "nl": "Fout"
+            },
+            "example": {
+              "en": "SyntaxError: invalid syntax"
+            }
           }
         ],
         "id": "run_script"
@@ -298,6 +320,17 @@
               "nl": "Returnwaarde"
             },
             "example": "42"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "title": {
+              "en": "Error",
+              "nl": "Fout"
+            },
+            "example": {
+              "en": "SyntaxError: invalid syntax"
+            }
           }
         ],
         "id": "run_script_with_argument"
