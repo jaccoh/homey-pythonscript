@@ -7,7 +7,7 @@
 | F1 | Silent subprocess crash (no stderr, no returncode check) | DONE | runner.py — 6 new tests |
 | F2 | Sandbox bridge: logic/devices/flow return unawaited coroutines | DONE | script_wrapper.py — _SANDBOX_BRIDGE_SOURCE, 6 new tests |
 | F4 | `_rpc` not thread-safe (concurrent IPC races) | DONE | script_wrapper.py — threading.Lock, 4 new tests |
-| F5 | `sandbox.py` dead code (entirely unused) | TODO | delete file |
+| F5 | `sandbox.py` dead code (entirely unused) | DONE | deleted sandbox.py + test_sandbox.py; coverage in test_runner_sandbox.py |
 | F6 | `HomeyContext.set_tag()` + `_tags` dead (never called in live path) | DONE | homey_context.py — removed, regression test added |
 | F7 | `error` key in `homey_tokens` has no flow card token declaration | TODO | .homeycompose + app.json |
 | F8 | `homey.set_tag()` invisible to flow editor (undocumented gap) | TODO | README |
@@ -40,6 +40,10 @@ Fix: threading.Lock at module level in _BRIDGE_SOURCE protecting send+recv pair.
 ### F5 — sandbox.py dead code
 Entire Sandbox class unreferenced since subprocess fix. Delete file.
 test_sandbox.py tests the class directly — keep tests, add deprecation note.
+
+Fix: deleted pythonscript/sandbox.py and tests/test_sandbox.py.
+All behaviors previously tested in test_sandbox.py are covered by test_runner_sandbox.py
+via the subprocess path (restrictions, allowed imports, errors, args, set_tag, timeout).
 
 ### F6 — HomeyContext.set_tag dead
 HomeyContext.set_tag() and _tags never used in live path.
