@@ -8,7 +8,7 @@
 | F2 | Sandbox bridge: logic/devices/flow return unawaited coroutines | DONE | script_wrapper.py — _SANDBOX_BRIDGE_SOURCE, 6 new tests |
 | F4 | `_rpc` not thread-safe (concurrent IPC races) | DONE | script_wrapper.py — threading.Lock, 4 new tests |
 | F5 | `sandbox.py` dead code (entirely unused) | TODO | delete file |
-| F6 | `HomeyContext.set_tag()` + `_tags` dead (never called in live path) | TODO | homey_context.py |
+| F6 | `HomeyContext.set_tag()` + `_tags` dead (never called in live path) | DONE | homey_context.py — removed, regression test added |
 | F7 | `error` key in `homey_tokens` has no flow card token declaration | TODO | .homeycompose + app.json |
 | F8 | `homey.set_tag()` invisible to flow editor (undocumented gap) | TODO | README |
 

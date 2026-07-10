@@ -33,10 +33,6 @@ async def _homey_rest(sdk, method: str, path: str, body=None):
 class HomeyContext:
     def __init__(self, sdk):
         self._sdk = sdk
-        self._tags: dict = {}
-
-    def set_tag(self, name: str, value) -> None:
-        self._tags[name] = value
 
     @property
     def logic(self):
