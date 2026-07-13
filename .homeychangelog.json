@@ -10,5 +10,8 @@
   },
   "0.3.0": {
     "en": "Lot's of testing and fixing dead-ends and cleaning up older code"
+  },
+  "0.3.1": {
+    "en": "App Store compliance"
   }
 }
