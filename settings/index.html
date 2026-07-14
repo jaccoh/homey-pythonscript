@@ -245,7 +245,14 @@
       errEl.style.display = 'none';
       closeNewPopup();
       currentScript = name;
-      document.getElementById('script-select').value = '';
+      var sel = document.getElementById('script-select');
+      if (!sel.querySelector('option[value="' + name + '"]')) {
+        var opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      }
+      sel.value = name;
       updateDelBtn();
       sandboxCb.checked = true;
       venvSel.value = '';
