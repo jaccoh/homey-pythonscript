@@ -13,5 +13,8 @@
   },
   "0.3.1": {
     "en": "App Store compliance"
+  },
+  "0.3.2": {
+    "en": "- Fixed: new script name now appears in dropdown immediately after creating,"
   }
 }
