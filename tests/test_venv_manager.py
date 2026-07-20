@@ -1,3 +1,7 @@
+import asyncio
+
+import pytest
+
 from pythonscript.venv_manager import VenvManager
 
 
@@ -44,10 +48,6 @@ class TestVenvManagerDelete:
     def test_delete_nonexistent_is_noop(self, tmp_venv_dir):
         vm = VenvManager(venv_root=tmp_venv_dir)
         vm.delete("card-does-not-exist")  # must not raise
-
-
-import asyncio
-import pytest
 
 
 @pytest.mark.asyncio
