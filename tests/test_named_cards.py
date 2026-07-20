@@ -1,7 +1,8 @@
 """Tests for Run Named Script flow card helpers."""
+import sys
 import pytest
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 
 def test_script_manager_importable_for_named_cards():
@@ -87,12 +88,6 @@ class TestExecuteNamedLogic:
         # card_arguments.get("script_name") or "" → None becomes ""
         raw = None or ""
         assert self._parse_script_name(raw) == ""
-
-
-import pytest
-import sys
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 
 @pytest.mark.asyncio
